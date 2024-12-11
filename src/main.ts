@@ -1,24 +1,38 @@
 import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
+import { Game } from './class/Game.ts'
+import { Piece } from './class/pieces/Piece.ts'
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+// document ready 
+var game = new Game();
+
+const canvas = document.querySelector<HTMLCanvasElement>('#canvas')!;
+const ctx = canvas.getContext('2d')!;
+
+game.fillBoard();
+
+function gameLoop() {
+  drawBoard();
+
+  requestAnimationFrame(gameLoop);
+}
+
+function drawBoard() {
+  for (let i = 0; i < game.board.length; i++) {
+    for (let j = 0; j < game.board[i].length; j++) {
+      const height = canvas.height / game.board.length;
+      const width = canvas.width / game.board[i].length;
+
+      if (game.board[i][j] instanceof Piece) {
+        const piece = game.board[i][j] as Piece;
+        ctx.fillStyle = piece.color;
+        
+
+        ctx.fillRect(piece.position[1] * width, piece.position[0] * height, width, height);
+      }
+    }
+  }
+
+}
+
+gameLoop();

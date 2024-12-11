@@ -10,4 +10,8 @@ export class Piece {
         this.weight = weight;
         this.position = position;
     }
+
+    toString() {
+        return this.color[0].toUpperCase() + this.constructor.name[0].toUpperCase();
+    }
 }
