@@ -1,5 +1,5 @@
 import { Board } from "../types/game-board";
-import { GameMovement } from "../types/game-movement.type";
+import { GameMovement } from "../types/game-movement";
 import { Dog } from "./pieces/Dog";
 import { Elephant } from "./pieces/Elephant";
 import { Horse } from "./pieces/Horse";

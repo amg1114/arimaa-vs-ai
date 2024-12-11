@@ -1,4 +1,4 @@
-import { ColorPiece } from "../types/color-piece.type";
+import { ColorPiece } from "../types/color-piece";
 
 export class Player {
     public color: ColorPiece;

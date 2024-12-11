@@ -1,4 +1,4 @@
-import { ColorPiece } from "../../types/color-piece.type";
+import { ColorPiece } from "../../types/color-piece";
 import { Board } from "../../types/game-board";
 
 export class Piece {

@@ -1,5 +1,5 @@
 import { ELEPHANT_WEIGHT } from "../../constants/weights.constant";
-import { ColorPiece } from "../../types/color-piece.type";
+import { ColorPiece } from "../../types/color-piece";
 import { Piece } from "./Piece";
 
 export class Elephant extends Piece {
