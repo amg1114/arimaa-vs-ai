@@ -5,7 +5,7 @@ import { Piece } from "./Piece";
 export class Horse extends Piece {
     constructor(color: ColorPiece, position: number[]) {
         const weight = HORSE_WEIGHT;
-        super(color, weight, position);
+        super(color, weight, position, "Horse");
     }
     move() {
         console.log("Horse move");

@@ -5,6 +5,6 @@ import { Piece } from "./Piece";
 export class Elephant extends Piece {
     constructor(color: ColorPiece, position: number[]) {
         const weight = ELEPHANT_WEIGHT;
-        super(color, weight, position);
+        super(color, weight, position, "Elephant");
     }
 }

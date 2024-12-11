@@ -6,7 +6,7 @@ export class Rabbit extends Piece {
     constructor(color: ColorPiece, position: number[]) {
         const weight = RABBIT_WEIGHT;
 
-        super(color, weight, position);
+        super(color, weight, position, "Rabbit");
     }
 
     move() {
