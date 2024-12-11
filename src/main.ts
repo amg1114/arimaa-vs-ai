@@ -3,16 +3,19 @@ import "./style.css";
 declare global {
     interface Window {
         game: Game;
+        playerA: Player
     }
 }
 
 import { Game } from "./class/Game.ts";
 import { Piece } from "./class/pieces/Piece.ts";
+import { Player } from "./class/Player.ts";
 
 // document ready
 var game = new Game();
 
 window.game = game;
+window.playerA = new Player("silver");
 
 const canvas = document.querySelector<HTMLCanvasElement>("#canvas")!;
 const ctx = canvas.getContext("2d")!;
@@ -34,10 +37,13 @@ function gameLoop() {
 }
 
 function drawBoard() {
+    // clear canvas
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
+    // draw board
     for (let i = 0; i < game.board.length; i++) {
         for (let j = 0; j < game.board[i].length; j++) {
+          
             const height = canvasHeight / game.board.length;
             const width = canvasWidth / game.board[i].length;
             
