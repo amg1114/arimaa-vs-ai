@@ -1,3 +1,4 @@
+import { GameMovement } from "../types/game-movement.type";
 import { Camel } from "./pieces/Camel";
 import { Cat } from "./pieces/Cat";
 import { Dog } from "./pieces/Dog";
@@ -7,8 +8,12 @@ import { Piece } from "./pieces/Piece";
 import { Rabbit } from "./pieces/Rabbit";
 
 export class Game {
-    public board: number[][] | Piece[][];
     public turn: "GOLD" | "SILVER" = "GOLD";
+    public steps: number = 4;
+
+    public board: number[][] | Piece[][];
+    public active_tile: number[] = [];
+
     constructor() {
         this.board = [
             [0, 0, 0, 0, 0, 0, 0, 0],
@@ -23,40 +28,34 @@ export class Game {
     }
 
     public fillBoard() {
-        for (let i = 0; i < this.board.length; i++) {
-            for (let j = 0; j < this.board[i].length; j++) {
-                if (this.board[i][j] === 1) break;
 
-                // Add rabbits
-                if (i === 0 || i === this.board.length - 1) {
-                    this.board[i][j] = new Rabbit(i === 0 ? "silver" : "gold", [i, j]);
-                }
+        this.board[1][0] = new Rabbit("silver", [1, 0]);
+        this.board[1][1] = new Rabbit("gold", [1, 1]);
+        this.board[2][0] = new Dog("gold", [2, 0]);
+        this.board[2][1] = new Dog("silver", [2, 1]);
 
-                // add horses
-                if ((j === 0 || j === this.board[i].length - 1) && (i === 1 || i === this.board.length - 2)) {
-                    this.board[i][j] = new Horse(i === 1 ? "silver" : "gold", [i, j]);
-                }
+        this.board[6][3] = new Rabbit("silver", [6, 3]);
+        this.board[5][3] = new Elephant("gold", [5, 3]);
+        this.board[6][2] = new Horse("silver", [6, 2]);
+    }
 
-                // add dogs
-                if ((j === 1 || j === this.board[i].length - 2) && (i === 1 || i === this.board.length - 2)) {
-                    this.board[i][j] = new Dog(i === 1 ? "silver" : "gold", [i, j]);
-                }
+    public movePiece(movement: GameMovement): void {
+        const {from, to} = movement;
+        let piece = this.board[from[0]][from[1]];
 
-                // add cats
-                if ((j === 2 || j === this.board[i].length - 3) && (i === 1 || i === this.board.length - 2)) {
-                    this.board[i][j] = new Cat(i === 1 ? "silver" : "gold", [i, j]);
-                }
+        if (piece instanceof Number) throw new Error("Invalid movement: You must select a piece");
+        piece = piece as Piece;
 
-                // add camel
-                if (j === 3 && (i === 1 || i === this.board.length - 2)) {
-                    this.board[i][j] = new Camel(i === 1 ? "silver" : "gold", [i, j]);
-                }
+        if (!piece.canMove(to, this.board)) throw new Error("Invalid movement: The piece can't move to that position");
 
-                // add elephant
-                if (j === 4 && (i === 1 || i === this.board.length - 2)) {
-                    this.board[i][j] = new Elephant(i === 1 ? "silver" : "gold", [i, j]);
-                }
-            }
+        this.board[to[0]][to[1]] = piece;
+        this.board[from[0]][from[1]] = 0;
+
+        this.steps--;
+
+        if (this.steps === 0) {
+            this.turn = this.turn === "GOLD" ? "SILVER" : "GOLD";
+            this.steps = 4;
         }
     }
 }

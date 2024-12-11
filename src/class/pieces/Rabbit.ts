@@ -9,8 +9,22 @@ export class Rabbit extends Piece {
         super(color, weight, position, "Rabbit");
     }
 
-    move() {
-        console.log('Rabbit move');
+
+    /**
+     * Determines if the rabbit can move to the specified position on the board.
+     *
+     * @param to - The target position to move to, represented as an array of coordinates [x, y].
+     * @param board - The current state of the board, which can be a 2D array of numbers or pieces.
+     * @returns A boolean indicating whether the rabbit can move to the specified position.
+     */
+    canMove(to: number[], board: number[][] | Piece[][]): boolean {
+        const [x] = this.position;
+        const [toX] = to;
+
+        // check if is moving behind
+        if (toX > x) return false;
+        
+        return super.canMove(to, board);
     }
 
 }
