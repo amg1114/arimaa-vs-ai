@@ -1,6 +1,8 @@
 import { Board, coordinates } from "../types/game-board";
 import { GameMovement } from "../types/game-movement";
 import { showErrorMessage } from "../utils/ui/menu";
+import { Camel } from "./pieces/Camel";
+import { Cat } from "./pieces/Cat";
 import { Dog } from "./pieces/Dog";
 import { Elephant } from "./pieces/Elephant";
 import { Horse } from "./pieces/Horse";
@@ -44,14 +46,41 @@ export class Game {
     }
 
     public fillBoard(): void {
-        this.placePiece(new Rabbit("silver", [1, 0], this.board));
-        this.placePiece(new Rabbit("gold", [1, 1], this.board));
-        this.placePiece(new Elephant("gold", [1, 2], this.board));
-        this.placePiece(new Dog("gold", [2, 0], this.board));
-        this.placePiece(new Dog("silver", [2, 1], this.board));
-        this.placePiece(new Elephant("silver", [6, 3], this.board));
-        this.placePiece(new Dog("gold", [5, 3], this.board));
-        this.placePiece(new Horse("gold", [6, 2], this.board));
+        // fill gold pieces
+        [this.playerGold, this.playerSilver].forEach((player) => {
+            let rabbitCount = 8;
+            let dogCount = 2;
+            let catCount = 2;
+            let horseCount = 2;
+            let camelCount = 1;
+            let elephantCount = 1;
+    
+            while (rabbitCount > 0 || dogCount > 0 || catCount > 0 || horseCount > 0 || camelCount > 0 || elephantCount > 0) {
+                // Define x and y coordinates here
+                const y = Math.floor(Math.random() * this.board.length);
+                const x = player.color === 'silver' ? Math.floor(Math.random() * 2) : Math.floor(Math.random() * 2) + (this.board[0].length - 2);
+    
+                if (this.board[x][y] === 0 && rabbitCount > 0) {
+                    this.placePiece(new Rabbit(player.color, [x, y], this.board));
+                    rabbitCount--;
+                } else if (this.board[x][y] === 0 && dogCount > 0) {
+                    this.placePiece(new Dog(player.color, [x, y], this.board));
+                    dogCount--;
+                } else if (this.board[x][y] === 0 && catCount > 0) {
+                    this.placePiece(new Cat(player.color, [x, y], this.board));
+                    catCount--;
+                } else if (this.board[x][y] === 0 && horseCount > 0) {
+                    this.placePiece(new Horse(player.color, [x, y], this.board));
+                    horseCount--;
+                } else if (this.board[x][y] === 0 && camelCount > 0) {
+                    this.placePiece(new Camel(player.color, [x, y], this.board));
+                    camelCount--;
+                } else if (this.board[x][y] === 0 && elephantCount > 0) {
+                    this.placePiece(new Elephant(player.color, [x, y], this.board));
+                    elephantCount--;
+                }
+            }
+        });
     }
 
     /**
