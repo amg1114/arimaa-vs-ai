@@ -8,7 +8,4 @@ export class Horse extends Piece {
         const weight = HORSE_WEIGHT;
         super(color, weight, board, position, "Horse");
     }
-    move() {
-        console.log("Horse move");
-    }
 }
