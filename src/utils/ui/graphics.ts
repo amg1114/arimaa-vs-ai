@@ -1,7 +1,7 @@
 import { coordinates } from "../../types/game-board";
 
 export const WHITE_CELL_COLOR = "#fffcf2";
-export const BLACK_CELL_COLOR = "#ffdc85";
+export const BLACK_CELL_COLOR = "#E0DFD5";
 export const TRAP_CELL_COLOR = "#DE3C4B";
 export const CELL_TEXT_COLOR = "#38302e";
 export const SELECTED_CELL_COLOR = "#1269B5";

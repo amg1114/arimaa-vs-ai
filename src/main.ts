@@ -93,6 +93,8 @@ function gameLoop() {
 
 function drawBoard() {
     // clear canvas
+    const iceImage = new Image();
+    iceImage.src = "/ice.svg";
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
     // draw board
@@ -112,12 +114,12 @@ function drawBoard() {
                 const piece = game.board[i][j] as Piece;
                 const image = new Image();
                 image.src = piece.icon;
-
+                
                 if (piece.isFreezed()) {
-                    drawImage(ctx, "/ice.svg", [cX, cY], cellWidth, cellHeight);
+                    drawImage(ctx, "ice-cell.png", [cX, cY], cellWidth, cellHeight);
                 }
-
                 drawImage(ctx, image.src, [cX, cY], cellWidth, cellHeight);
+
             } else {
                 if (game.availableMovements.some((movement) => movement[0] === i && movement[1] === j)) {
                     drawCell(ctx, [cX, cY], cellWidth, cellHeight, "green");
@@ -130,9 +132,10 @@ function drawBoard() {
 
             if (j === 0) {
                 ctx.fillText(`${i}`, j * cellWidth + 5, i * cellHeight + 10);
-            } else if (i === 0) {
+            }else if (i === 0) {
                 ctx.fillText(`${j}`, j * cellWidth + 5, i * cellHeight + 10);
             }
+            // ctx.fillText(`${i}, ${j}`, j * cellWidth + 5, i * cellHeight + 10);
         }
     }
 
