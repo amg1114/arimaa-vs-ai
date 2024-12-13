@@ -7,15 +7,19 @@ import { Piece } from "./pieces/Piece";
 import { Rabbit } from "./pieces/Rabbit";
 import { Player } from "./Player";
 
-
 export class Game {
     public turn: "GOLD" | "SILVER" = "GOLD";
+
     public board: Board;
-    public activeCell: coordinates | null = null;
-    public history: GameMovement[] = [];
-    public floatingPiece: Piece | null = null;
     public cellWidth: number;
     public cellHeight: number;
+
+    public activeCell: coordinates | null = null;
+    public floatingPiece: Piece | null = null;
+
+    public history: GameMovement[] = [];
+    public avilableMovements: GameMovement[] = [];
+
     constructor(canvasHeight: number, canvasWidth: number) {
         this.board = Array(8)
             .fill(null)
@@ -25,11 +29,6 @@ export class Game {
         this.cellWidth = canvasWidth / this.board[0].length;
 
         this.initializeTraps();
-    }
-
-    private initializeTraps(): void {
-        this.board[2][2] = this.board[2][5] = 1;
-        this.board[5][2] = this.board[5][5] = 1;
     }
 
     public fillBoard(): void {
@@ -42,24 +41,44 @@ export class Game {
         this.placePiece(new Horse("gold", [6, 2]));
     }
 
-    private placePiece(piece: Piece): void {
-        const [x, y] = piece.position;
-        this.board[x][y] = piece;
+    /**
+     * Retrieves the cell coordinates at the specified x and y pixel positions.
+     *
+     * @param x - The x-coordinate in pixels.
+     * @param y - The y-coordinate in pixels.
+     * @returns The cell coordinates as a tuple [row, col].
+     */
+    public getCellAt(x: number, y: number): coordinates {
+        const col = Math.floor(x / this.cellWidth);
+        const row = Math.floor(y / this.cellHeight);
+
+        return [row, col];
     }
 
+    /**
+     * Retrieves the piece at the specified position on the board.
+     *
+     * @param position - An array containing the x and y coordinates of the position.
+     * @returns The piece at the specified position if it exists, otherwise null.
+     */
     public getPieceAt(position: number[]): Piece | null {
         const [x, y] = position;
         const cell = this.board[x][y];
         return cell instanceof Piece ? cell : null;
     }
 
-    public getCellAt(x: number, y: number): coordinates {
-        const col = Math.floor(x / this.cellWidth);
-        const row = Math.floor(y / this.cellHeight);
-        
-        return [row, col];
-    }
-
+    /**
+     * Moves a piece on the game board according to the provided movement.
+     * 
+     * @param {GameMovement} movement - The movement details including the starting position, 
+     *                                  destination position, and the player making the move.
+     * 
+     * @throws {Error} If the movement is invalid due to various reasons such as:
+     *                 - Attempting to push a piece without a floating piece.
+     *                 - Selecting a piece that doesn't exist.
+     *                 - Moving a piece to an invalid position.
+     *                 - Performing a push movement without a floating piece.
+     */
     public movePiece(movement: GameMovement): void {
         const { from, to, player } = movement;
         const [toX, toY] = to;
@@ -105,6 +124,26 @@ export class Game {
         this.completeMovement(player, movement);
     }
 
+    /**
+     * Initializes traps on the game board by setting specific positions to 1.
+     * The traps are placed at the following coordinates:
+     * - (2, 2)
+     * - (2, 5)
+     * - (5, 2)
+     * - (5, 5)
+     *
+     * @private
+     */
+    private initializeTraps(): void {
+        this.board[2][2] = this.board[2][5] = 1;
+        this.board[5][2] = this.board[5][5] = 1;
+    }
+
+    private placePiece(piece: Piece): void {
+        const [x, y] = piece.position;
+        this.board[x][y] = piece;
+    }
+
     private simpleMovement(piece: Piece, to: number[], player: Player, movement: GameMovement): void {
         const [toX, toY] = to;
         this.board[toX][toY] = piece;
@@ -136,8 +175,6 @@ export class Game {
         this.history.push(movement);
         player.turns--;
     }
-
-    
 
     public pullMovement(): void {
         // Implement pull movement logic
