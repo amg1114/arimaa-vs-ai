@@ -175,7 +175,7 @@ export class Game {
     }
 
     public pushMovement(movement: GameMovement): void {
-        const { from, to } = movement;
+        const { from, to, player } = movement;
         const [fromX, fromY] = from!;
         const [toX, toY] = to;
         const piece = this.getPieceAt(from!)!;
@@ -191,17 +191,21 @@ export class Game {
         this.board[fromX][fromY] = 0;
         this.board[toX][toY] = piece;
         this.floatingPiece = enemyPiece;
-    
 
-        this.history.push(movement);
-        this.availableMovements = [];
-        this.activeCell = null;
+        this.completeMovement(player, movement, true);
+        this.availableMovements = enemyPiece.getAvailableMovements();
     }
 
     public pushPiece(movement: PushMovement): void {
         const { to, player } = movement;
         const [toX, toY] = to;
         const piece = this.floatingPiece!;
+
+        if (!this.availableMovements.some((movement) => movement.coordinates[0] === toX && movement.coordinates[1] === toY)) {
+            showErrorMessage("Invalid movement: The piece can't move to that position");
+            throw new Error("Invalid movement: The piece can't move to that position");
+        }
+
         this.board[toX][toY] = piece;
         piece.position = to;
 
@@ -209,10 +213,14 @@ export class Game {
         this.completeMovement(player, movement);
     }
 
-    private completeMovement(player: Player, movement: GameMovement | PushMovement): void {
+    private completeMovement(player: Player, movement: GameMovement | PushMovement, skipDisableMove = false): void {
         this.history.push(movement);
         this.availableMovements = [];
         this.activeCell = null;
+
+        if (!skipDisableMove) {
+            this.isMoving = false;
+        }
 
         player.turns--;
     }
