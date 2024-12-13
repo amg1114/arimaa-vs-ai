@@ -1,5 +1,5 @@
 import { Board, coordinates } from "../types/game-board";
-import { GameMovement } from "../types/game-movement";
+import { AvailableMovement, GameMovement, PushMovement } from "../types/game-movement";
 import { showErrorMessage } from "../utils/ui/menu";
 import { Camel } from "./pieces/Camel";
 import { Cat } from "./pieces/Cat";
@@ -23,12 +23,10 @@ export class Game {
     public activeCell: coordinates | null = null;
     public floatingPiece: Piece | null = null;
 
-    public history: GameMovement[] = [];
-    public availableMovements: coordinates[] = [];
+    public history: (GameMovement | PushMovement)[] = [];
+    public availableMovements: AvailableMovement[] = [];
 
-    public isMoving: boolean = false;
-    public isPushing: boolean = false;
-    public isPulling: boolean = false;
+    public isMoving: "push" | "pull" | "simple" | false = false;
 
     constructor(canvasHeight: number, canvasWidth: number, playerGold: Player, playerSilver: Player) {
         this.board = Array(8)
@@ -39,13 +37,24 @@ export class Game {
         this.cellWidth = canvasWidth / this.board[0].length;
 
         this.playerGold = playerGold;
-        this.currentPlayer = playerGold;
+        this.currentPlayer = playerSilver;
         this.playerSilver = playerSilver;
 
         this.initializeTraps();
     }
 
     public fillBoard(): void {
+        this.placePiece(new Rabbit("silver", [1, 0], this.board));
+        this.placePiece(new Rabbit("gold", [1, 1], this.board));
+        this.placePiece(new Dog("gold", [2, 0], this.board));
+        this.placePiece(new Dog("silver", [2, 1], this.board));
+        this.placePiece(new Dog("silver", [2, 1], this.board));
+        this.placePiece(new Elephant("silver", [6, 3], this.board));
+        this.placePiece(new Dog("gold", [5, 3], this.board));
+        this.placePiece(new Horse("gold", [6, 2], this.board));
+    }
+
+    public randomFill(): void {
         // fill gold pieces
         [this.playerGold, this.playerSilver].forEach((player) => {
             let rabbitCount = 8;
@@ -54,12 +63,12 @@ export class Game {
             let horseCount = 2;
             let camelCount = 1;
             let elephantCount = 1;
-    
+
             while (rabbitCount > 0 || dogCount > 0 || catCount > 0 || horseCount > 0 || camelCount > 0 || elephantCount > 0) {
                 // Define x and y coordinates here
                 const y = Math.floor(Math.random() * this.board.length);
-                const x = player.color === 'silver' ? Math.floor(Math.random() * 2) : Math.floor(Math.random() * 2) + (this.board[0].length - 2);
-    
+                const x = player.color === "silver" ? Math.floor(Math.random() * 2) : Math.floor(Math.random() * 2) + (this.board[0].length - 2);
+
                 if (this.board[x][y] === 0 && rabbitCount > 0) {
                     this.placePiece(new Rabbit(player.color, [x, y], this.board));
                     rabbitCount--;
@@ -152,7 +161,7 @@ export class Game {
             throw new Error("Invalid movement: You can't move the opponent's piece");
         }
 
-        if (!this.availableMovements.some((movement) => movement[0] === toX && movement[1] === toY)) {
+        if (!this.availableMovements.some((movement) => movement.coordinates[0] === toX && movement.coordinates[1] === toY)) {
             showErrorMessage("Invalid movement: The piece can't move to that position");
             throw new Error("Invalid movement: The piece can't move to that position");
         }
@@ -165,7 +174,42 @@ export class Game {
         this.completeMovement(player, movement);
     }
 
-    private completeMovement(player: Player, movement: GameMovement): void {
+    public pushMovement(movement: GameMovement): void {
+        const { from, to } = movement;
+        const [fromX, fromY] = from!;
+        const [toX, toY] = to;
+        const piece = this.getPieceAt(from!)!;
+
+        if (!this.availableMovements.some((movement) => movement.coordinates[0] === toX && movement.coordinates[1] === toY)) {
+            showErrorMessage("Invalid movement: The piece can't move to that position");
+            throw new Error("Invalid movement: The piece can't move to that position");
+        }
+
+        const enemyPiece = this.getPieceAt(to)!;
+
+        piece.position = to;
+        this.board[fromX][fromY] = 0;
+        this.board[toX][toY] = piece;
+        this.floatingPiece = enemyPiece;
+    
+
+        this.history.push(movement);
+        this.availableMovements = [];
+        this.activeCell = null;
+    }
+
+    public pushPiece(movement: PushMovement): void {
+        const { to, player } = movement;
+        const [toX, toY] = to;
+        const piece = this.floatingPiece!;
+        this.board[toX][toY] = piece;
+        piece.position = to;
+
+        this.floatingPiece = null;
+        this.completeMovement(player, movement);
+    }
+
+    private completeMovement(player: Player, movement: GameMovement | PushMovement): void {
         this.history.push(movement);
         this.availableMovements = [];
         this.activeCell = null;
@@ -173,7 +217,7 @@ export class Game {
         player.turns--;
     }
 
-    public setAvailableMovements(movements: coordinates[]): void {
+    public setAvailableMovements(movements: AvailableMovement[]): void {
         this.availableMovements = movements;
     }
 }

@@ -31,7 +31,7 @@ export function onCellClick(event: MouseEvent, game: Game, canvas: HTMLCanvasEle
 
         game.activeCell = piece.position;
 
-        if (!piece.isFreezed(game.board)) {
+        if (!piece.isFreezed()) {
             enableMenu();
             return;
         }
@@ -58,8 +58,13 @@ export function onCellHover(event: MouseEvent, game: Game, canvas: HTMLCanvasEle
     const coordinates = game.getCellAt(x, y);
     const piece = game.getPieceAt(coordinates);
 
+    if(game.isMoving === "push" && game.floatingPiece) {
+        canvas.style.cursor = "grabbing";
+        return;
+    }
+
     if (piece) {
-        if (piece.isFreezed(game.board) || piece.color !== game.currentPlayer.color) {
+        if (piece.isFreezed() || piece.color !== game.currentPlayer.color) {
             canvas.style.cursor = "not-allowed";
             return;
         }

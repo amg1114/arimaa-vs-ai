@@ -1,5 +1,6 @@
 import { ColorPiece } from "../../types/color-piece";
 import { Board, coordinates } from "../../types/game-board";
+import { AvailableMovement } from "../../types/game-movement";
 
 export class Piece {
     public board: Board;
@@ -174,11 +175,14 @@ export class Piece {
      */
     getAvailableMovements() {
         const adjacentTiles = this.getAdjacentsMovements(this.position);
-        let availableMovements: number[][] = [];
+        let availableMovements: AvailableMovement[] = [];
 
         for (const tile of adjacentTiles) {
             if (this.canMove(tile)) {
-                availableMovements.push(tile);
+                availableMovements.push({
+                    coordinates: tile,
+                    type: "simple"
+                });
             }
         }
 
@@ -197,7 +201,7 @@ export class Piece {
      */
     getPushablePieces() {
         const adjacentTiles = this.getAdjacentsMovements(this.position);
-        let pushablePieces: Piece[] = [];
+        let pushablePieces: AvailableMovement[] = [];
 
         for (const tile of adjacentTiles) {
             const [x, y] = tile;
@@ -207,7 +211,10 @@ export class Piece {
             const piece = this.board[x][y] as Piece;
             if (piece.color === this.color || piece.weight > this.weight) continue;
 
-            pushablePieces.push(piece);
+            pushablePieces.push({
+                coordinates: piece.position,
+                type: "push"
+            });
         }
 
         return pushablePieces;
