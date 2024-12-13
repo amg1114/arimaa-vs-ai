@@ -1,10 +1,11 @@
 import { ELEPHANT_WEIGHT } from "../../constants/weights.constant";
 import { ColorPiece } from "../../types/color-piece";
+import { Board } from "../../types/game-board";
 import { Piece } from "./Piece";
 
 export class Elephant extends Piece {
-    constructor(color: ColorPiece, position: number[]) {
+    constructor(color: ColorPiece, position: number[], board: Board) {
         const weight = ELEPHANT_WEIGHT;
-        super(color, weight, position, "Elephant");
+        super(color, weight, board, position, "Elephant");
     }
 }

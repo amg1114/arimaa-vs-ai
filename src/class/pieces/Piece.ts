@@ -1,7 +1,9 @@
 import { ColorPiece } from "../../types/color-piece";
-import { Board } from "../../types/game-board";
+import { Board, coordinates } from "../../types/game-board";
 
 export class Piece {
+    public board: Board;
+
     /**
      * The color of the piece.
      *
@@ -17,7 +19,7 @@ export class Piece {
     public weight: number;
 
     /**
-     * The current position of the piece on the board.
+     * The current position of the piece on the this.board.
      * Represented as an array of numbers where each number corresponds to a coordinate.
      */
     public position: number[];
@@ -34,16 +36,22 @@ export class Piece {
      */
     public isFloating: boolean = false;
 
-
     /**
      * Indicates whether the piece is currently active.
      * @type {boolean}
      */
     public active: boolean = false;
 
-    constructor(color: ColorPiece, weight: number, position: number[], name: "Rabbit" | "Horse" | "Camel" | "Elephant" | "Dog" | "Cat") {
+    constructor(
+        color: ColorPiece,
+        weight: number,
+        board: Board,
+        position: number[],
+        name: "Rabbit" | "Horse" | "Camel" | "Elephant" | "Dog" | "Cat"
+    ) {
         this.color = color;
         this.weight = weight;
+        this.board = board;
         this.position = position;
         this.name = name;
     }
@@ -55,7 +63,7 @@ export class Piece {
      * @param board - The current state of the board, which can be a 2D array of numbers or pieces.
      * @returns A boolean indicating whether the piece can move to the specified position.
      */
-    canMove(to: number[], board: Board, excludedPosition: number[][] | null = null): boolean {
+    canMove(to: number[], excludedPosition: number[][] | null = null): boolean {
         const [x, y] = this.position;
         const [toX, toY] = to;
 
@@ -65,31 +73,31 @@ export class Piece {
         }
 
         // check if is moving to outside the board
-        if (toX < 0 || toY < 0 || toX >= board.length || toY >= board[toX].length) return false;
+        if (toX < 0 || toY < 0 || toX >= this.board.length || toY >= this.board[toX].length) return false;
 
         // check if is not moving diagonally
         const adjacentTiles = this.getAdjacentsMovements(to);
         if (!adjacentTiles.some((tile) => tile[0] === x && tile[1] === y)) return false;
 
         // check if is moving to an empty tile
-        if (board[toX][toY] !== 0) return false; 
+        if (this.board[toX][toY] !== 0) return false;
 
         return true;
     }
 
     /**
-     * Determines if the current piece can push another piece on the board.
+     * Determines if the current piece can push another piece on the this.board.
      *
      * @param piece - The piece to be pushed.
      * @param board - The game board, represented as a 2D array of numbers or pieces.
      * @returns `true` if the current piece can push the specified piece, otherwise `false`.
      */
-    canPush(piece: Piece, board: Board): boolean {
+    canPush(piece: Piece): boolean {
         const adjacentTiles = this.getAdjacentsMovements(piece.position);
 
-        if (!adjacentTiles.some((tile) => board[tile[0]][tile[1]] === 0)) return false;
+        if (!adjacentTiles.some((tile) => this.board[tile[0]][tile[1]] === 0)) return false;
 
-        if(this.color === piece.color) return false;
+        if (this.color === piece.color) return false;
 
         if (this.weight <= piece.weight) return false;
 
@@ -97,19 +105,17 @@ export class Piece {
     }
 
     // To Do:
-    canPull(piece: Piece, board: Board): boolean{
-        return  true;
-    }
+    canPull(): void {}
 
     /**
-     * Determines if the piece is frozen on the board.
+     * Determines if the piece is frozen on the this.board.
      * A piece is considered frozen if it is adjacent to a heavier piece of the opposite color
      * and there are no adjacent pieces of the same color.
      *
      * @param board - The game board, which can be a 2D array of numbers or Pieces.
      * @returns `true` if the piece is frozen, `false` otherwise.
      */
-    isFreezed(board: Board): boolean {
+    isFreezed(): boolean {
         let weighterPieces = 0;
 
         const adjacentTiles = this.getAdjacentsMovements(this.position);
@@ -117,8 +123,8 @@ export class Piece {
         for (const tile of adjacentTiles) {
             const [x, y] = tile;
 
-            if (!board[x][y] || board[x][y] === 1 || board[x][y] === 0) continue;
-            const piece = board[x][y] as Piece;
+            if (!this.board[x][y] || this.board[x][y] === 1 || this.board[x][y] === 0) continue;
+            const piece = this.board[x][y] as Piece;
 
             // If the adjacent piece is from the same color, then the piece is not freezed
             if (piece.color === this.color) return false;
@@ -136,27 +142,34 @@ export class Piece {
      * @param position - An array containing the x and y coordinates of the current position.
      * @returns An array of arrays, each containing the x and y coordinates of an adjacent position.
      */
-    getAdjacentsMovements(position: number[]): number[][] {
+    getAdjacentsMovements(position: number[]): coordinates[] {
         const [x, y] = position;
+        let adjacents: coordinates[] = [];
 
-        return [
-            [x - 1, y], // arriba
-            [x + 1, y], // abajo
-            [x, y - 1], // izquierda
-            [x, y + 1], // derecha
-        ];
+        if (this.board[x - 1] && this.board[x - 1][y] !== undefined) adjacents.push([x - 1, y]);
+        if (this.board[x + 1] && this.board[x + 1][y] !== undefined) adjacents.push([x + 1, y]);
+        if (this.board[x][y - 1] !== undefined) adjacents.push([x, y - 1]);
+        if (this.board[x][y + 1] !== undefined) adjacents.push([x, y + 1]);
+
+        return adjacents;
     }
 
-    move() {}
-
-    push() {}
-
-    getAvailableMovements(board: Board) {
+    /**
+     * Retrieves the available movements for the piece on the given board.
+     *
+     * This method calculates the adjacent tiles to the piece's current position
+     * and checks if the piece can move to each of those tiles. If the piece can
+     * move to a tile, the tile is added to the list of available movements.
+     *
+     * @param board - The current state of the board.
+     * @returns An array of coordinates representing the available movements.
+     */
+    getAvailableMovements() {
         const adjacentTiles = this.getAdjacentsMovements(this.position);
         let availableMovements: number[][] = [];
 
         for (const tile of adjacentTiles) {
-            if (this.canMove(tile, board)) {
+            if (this.canMove(tile)) {
                 availableMovements.push(tile);
             }
         }
@@ -174,16 +187,16 @@ export class Piece {
      * @param board - The game board represented as a 2D array of pieces.
      * @returns An array of pieces that can be pushed by the current piece.
      */
-    getPushablePieces(board: Board) {
+    getPushablePieces() {
         const adjacentTiles = this.getAdjacentsMovements(this.position);
         let pushablePieces: Piece[] = [];
 
         for (const tile of adjacentTiles) {
             const [x, y] = tile;
 
-            if (board[x][y] === 0 || board[x][y] === 1) continue;
+            if (this.board[x][y] === 0 || this.board[x][y] === 1) continue;
 
-            const piece = board[x][y] as Piece;
+            const piece = this.board[x][y] as Piece;
             if (piece.color === this.color || piece.weight > this.weight) continue;
 
             pushablePieces.push(piece);
@@ -194,23 +207,23 @@ export class Piece {
 
     /**
      * Retrieves the pieces that can be pulled by the current piece.
-     * A piece can be pulled if it is adjacent to the current piece, 
+     * A piece can be pulled if it is adjacent to the current piece,
      * is not of the same color, and has a weight less than the current piece.
-     * 
-     * @param {Board} board - The current state of the game board.
+     *
+     * @param {Board} board - The current state of the game this.board.
      * @returns {Piece[]} An array of pieces that can be pulled by the current piece.
      */
-    getPullablePieces(board: Board) {
+    getPullablePieces() {
         const adjacentTiles = this.getAdjacentsMovements(this.position);
         let pullablePieces: Piece[] = [];
 
-        if (adjacentTiles.some((tile) => board[tile[0]][tile[1]] === 0)) {
+        if (adjacentTiles.some((tile) => this.board[tile[0]][tile[1]] === 0)) {
             for (const tile of adjacentTiles) {
                 const [x, y] = tile;
 
-                if (board[x][y] === 0 || board[x][y] === 1) continue;
+                if (this.board[x][y] === 0 || this.board[x][y] === 1) continue;
 
-                const piece = board[x][y] as Piece;
+                const piece = this.board[x][y] as Piece;
                 if (piece.color === this.color || piece.weight > this.weight) continue;
 
                 pullablePieces.push(piece);

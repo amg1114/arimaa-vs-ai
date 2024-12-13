@@ -1,22 +1,25 @@
 import "./style.css";
 
+import { Game } from "./class/Game.ts";
+import { Piece } from "./class/pieces/Piece.ts";
+import { Player } from "./class/Player.ts";
+
+import { GameMovement } from "./types/game-movement";
+
+import { pullMovementButton, pushMovementButton, simpleMovementButton, disableMenu } from "./utils/ui/menu.ts";
+import { onCellClick, onCellHover, parseOffsetToCoordinates } from "./utils/ui/events.ts";
+
+import { drawCell, drawImage } from "./utils/ui/graphics.ts";
+
+const canvas = document.querySelector<HTMLCanvasElement>("#canvas")!;
+const ctx = canvas.getContext("2d")!;
+
 declare global {
     interface Window {
         game: Game;
         playerA: Player;
     }
 }
-
-import { Game } from "./class/Game.ts";
-import { Piece } from "./class/pieces/Piece.ts";
-import { Player } from "./class/Player.ts";
-import { pullMovementButton, pushMovementButton, simpleMovementButton, disableMenu, showErrorMessage, hideErrorMessage } from "./utils/ui/menu.ts";
-import { onCellClick, onCellHover, parseOffsetToCoordinates } from "./utils/ui/events.ts";
-import { GameMovement } from "./types/game-movement";
-import { drawCell, drawImage } from "./utils/ui/graphics.ts";
-
-const canvas = document.querySelector<HTMLCanvasElement>("#canvas")!;
-const ctx = canvas.getContext("2d")!;
 
 // Ajustar el tamaño del canvas para alta resolución
 const canvasWidth = 600;
@@ -43,8 +46,7 @@ canvas.addEventListener("click", (event: MouseEvent) => {
     const offset = parseOffsetToCoordinates(event, canvas);
     const cell = game.getCellAt(offset[0], offset[1]);
 
-    hideErrorMessage();
-
+    console.log({cell});
     if (game.isMoving) {
         const movement: GameMovement = {
             from: game.activeCell!,
@@ -53,6 +55,7 @@ canvas.addEventListener("click", (event: MouseEvent) => {
         };
 
         game.simpleMovement(movement);
+        disableMenu();
         return;
     }
 
@@ -67,10 +70,10 @@ simpleMovementButton.addEventListener("click", () => {
     const piece = game.getPieceAt(game.activeCell!);
 
     if (piece) {
-        const movements = piece.getAvailableMovements(game.board);
+        const movements = piece.getAvailableMovements();
         game.isMoving = true;
+
         game.setAvailableMovements(movements);
-        // console.log(game.availableMovements);
     }
 });
 
@@ -100,23 +103,21 @@ function drawBoard() {
                 const image = new Image();
 
                 image.src = `/pieces/${piece.color.toLowerCase()}/${piece.name.toLocaleLowerCase()}.svg`;
-                
+
                 if (game.activeCell && game.activeCell[0] === piece.position[0] && game.activeCell[1] === piece.position[1]) {
                     drawCell(ctx, [j * cellWidth, i * cellHeight], cellWidth, cellHeight, "blue");
                 }
-               
 
-                if(piece.isFreezed(game.board)) {
+                if (piece.isFreezed()) {
                     drawImage(ctx, "/ice.svg", [j * cellWidth, i * cellHeight], cellWidth, cellHeight);
                 }
 
                 drawImage(ctx, image.src, [j * cellWidth, i * cellHeight], cellWidth, cellHeight);
-
             } else {
                 const tile = game.board[i][j] as number;
 
                 if (tile === 1) {
-                  drawCell(ctx, [j * cellWidth, i * cellHeight], cellWidth, cellHeight, "gray");
+                    drawCell(ctx, [j * cellWidth, i * cellHeight], cellWidth, cellHeight, "gray");
                 }
 
                 if (game.availableMovements.some((movement) => movement[0] === i && movement[1] === j)) {
