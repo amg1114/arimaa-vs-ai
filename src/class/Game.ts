@@ -14,11 +14,15 @@ export class Game {
     public activeCell: coordinates | null = null;
     public history: GameMovement[] = [];
     public floatingPiece: Piece | null = null;
-
-    constructor() {
+    public cellWidth: number;
+    public cellHeight: number;
+    constructor(canvasHeight: number, canvasWidth: number) {
         this.board = Array(8)
             .fill(null)
             .map(() => Array(8).fill(0));
+
+        this.cellHeight = canvasHeight / this.board.length;
+        this.cellWidth = canvasWidth / this.board[0].length;
 
         this.initializeTraps();
     }
@@ -47,6 +51,13 @@ export class Game {
         const [x, y] = position;
         const cell = this.board[x][y];
         return cell instanceof Piece ? cell : null;
+    }
+
+    public getCellAt(x: number, y: number): coordinates {
+        const col = Math.floor(x / this.cellWidth);
+        const row = Math.floor(y / this.cellHeight);
+        
+        return [row, col];
     }
 
     public movePiece(movement: GameMovement): void {

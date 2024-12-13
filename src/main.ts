@@ -10,54 +10,32 @@ declare global {
 import { Game } from "./class/Game.ts";
 import { Piece } from "./class/pieces/Piece.ts";
 import { Player } from "./class/Player.ts";
-import { disableMenu, enableMenu, showErrorMessage } from "./utils/ui/menu.ts";
-
-// document ready
-var game = new Game();
-
-window.game = game;
-window.playerA = new Player("silver");
+import { disableMenu } from "./utils/ui/menu.ts";
+import { onCellClick, onCellHover } from "./utils/ui/events.ts";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#canvas")!;
 const ctx = canvas.getContext("2d")!;
 
 // Ajustar el tamaño del canvas para alta resolución
-canvas.width = 600;
-canvas.height = 600;
+const canvasWidth = 600;
+const canvasHeight = 600;
 
-const canvasWidth = canvas.width;
-const canvasHeight = canvas.height;
+canvas.width = canvasWidth;
+canvas.height = canvasHeight;
 
-const cellHeight = canvasHeight / game.board.length;
-const cellWidth = canvasWidth / game.board[0].length;
+// document ready
+var game = new Game(canvasHeight, canvasWidth);
+
+const cellHeight = game.cellHeight;
+const cellWidth = game.cellWidth;
+
+window.game = game;
+window.playerA = new Player("silver");
 
 game.fillBoard();
 
-canvas.addEventListener("click", (event: MouseEvent) => {
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-
-    const col = Math.floor(x / cellWidth);
-    const row = Math.floor(y / cellHeight);
-    const piece = game.getPieceAt([row, col]);
-
-    disableMenu();
-
-    if (piece) {
-        game.activeCell = piece.position;
-
-        if (!piece.isFreezed(game.board)) {
-            enableMenu();
-            return;
-        }
-
-        showErrorMessage("The piece is frozen");
-        return;
-    }
-
-    game.activeCell = null;
-});
+canvas.addEventListener("click", (event: MouseEvent) => onCellClick(event, game, canvas));
+canvas.addEventListener("mousemove", (event: MouseEvent) => onCellHover(event, game, canvas));
 
 function gameLoop() {
     drawBoard();
