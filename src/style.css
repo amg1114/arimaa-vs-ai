@@ -1,11 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 body {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
+  background: #1d1d1d;
 }
 
 canvas {
   display: block;
-  border: 1px solid black;
+  border: 1px solid #808080;
 }
