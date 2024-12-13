@@ -10,6 +10,13 @@ export class Piece {
      * @type {ColorPiece}
      */
     public color: ColorPiece;
+    
+    /**
+     * The icon path of the piece.
+     *
+     * @type {string}
+     */
+    public icon;
 
     /**
      * The weight of the piece.
@@ -54,6 +61,7 @@ export class Piece {
         this.board = board;
         this.position = position;
         this.name = name;
+        this.icon = `/pieces/${this.color.toLowerCase()}/${this.name.toLowerCase()}.svg`;
     }
 
     /**

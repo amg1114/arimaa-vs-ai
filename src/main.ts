@@ -9,7 +9,7 @@ import { GameMovement } from "./types/game-movement";
 import { pullMovementButton, pushMovementButton, simpleMovementButton, disableMenu } from "./utils/ui/menu.ts";
 import { onCellClick, onCellHover, parseOffsetToCoordinates } from "./utils/ui/events.ts";
 
-import { drawCell, drawImage } from "./utils/ui/graphics.ts";
+import { BLACK_CELL_COLOR, CELL_TEXT_COLOR, drawCell, drawImage, drawSelectedCell, TRAP_CELL_COLOR, WHITE_CELL_COLOR } from "./utils/ui/graphics.ts";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#canvas")!;
 const ctx = canvas.getContext("2d")!;
@@ -46,7 +46,7 @@ canvas.addEventListener("click", (event: MouseEvent) => {
     const offset = parseOffsetToCoordinates(event, canvas);
     const cell = game.getCellAt(offset[0], offset[1]);
 
-    console.log({cell});
+    console.log({ cell });
     if (game.isMoving) {
         const movement: GameMovement = {
             from: game.activeCell!,
@@ -98,39 +98,47 @@ function drawBoard() {
     // draw board
     for (let i = 0; i < game.board.length; i++) {
         for (let j = 0; j < game.board[i].length; j++) {
+            const cX = j * cellWidth;
+            const cY = i * cellHeight;
+            const color = (i + j) % 2 === 0 ? WHITE_CELL_COLOR : BLACK_CELL_COLOR;
+
+            drawCell(ctx, [cX, cY], cellWidth, cellHeight, color);
+
+            if (game.isTrap([i, j])) {
+                drawCell(ctx, [cX, cY], cellWidth, cellHeight, TRAP_CELL_COLOR);
+            }
+
             if (game.board[i][j] instanceof Piece) {
                 const piece = game.board[i][j] as Piece;
                 const image = new Image();
-
-                image.src = `/pieces/${piece.color.toLowerCase()}/${piece.name.toLocaleLowerCase()}.svg`;
-
-                if (game.activeCell && game.activeCell[0] === piece.position[0] && game.activeCell[1] === piece.position[1]) {
-                    drawCell(ctx, [j * cellWidth, i * cellHeight], cellWidth, cellHeight, "blue");
-                }
+                image.src = piece.icon;
 
                 if (piece.isFreezed()) {
-                    drawImage(ctx, "/ice.svg", [j * cellWidth, i * cellHeight], cellWidth, cellHeight);
+                    drawImage(ctx, "/ice.svg", [cX, cY], cellWidth, cellHeight);
                 }
 
-                drawImage(ctx, image.src, [j * cellWidth, i * cellHeight], cellWidth, cellHeight);
+                drawImage(ctx, image.src, [cX, cY], cellWidth, cellHeight);
             } else {
-                const tile = game.board[i][j] as number;
-
-                if (tile === 1) {
-                    drawCell(ctx, [j * cellWidth, i * cellHeight], cellWidth, cellHeight, "gray");
-                }
-
                 if (game.availableMovements.some((movement) => movement[0] === i && movement[1] === j)) {
-                    drawCell(ctx, [j * cellWidth, i * cellHeight], cellWidth, cellHeight, "green");
+                    drawCell(ctx, [cX, cY], cellWidth, cellHeight, "green");
                 }
             }
 
             // add index to tile
             ctx.font = "10px Arial";
-            ctx.fillStyle = "white";
+            ctx.fillStyle = CELL_TEXT_COLOR;
 
-            ctx.fillText(`${i}, ${j}`, j * cellWidth + 5, i * cellHeight + 10);
+            if (j === 0) {
+                ctx.fillText(`${i}`, j * cellWidth + 5, i * cellHeight + 10);
+            } else if (i === 0) {
+                ctx.fillText(`${j}`, j * cellWidth + 5, i * cellHeight + 10);
+            }
         }
+    }
+
+    if (game.activeCell) {
+        const [row, col] = game.activeCell;
+        drawSelectedCell(ctx, [col * cellWidth, row * cellHeight], cellWidth, cellHeight);
     }
 }
 

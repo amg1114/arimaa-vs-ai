@@ -68,6 +68,18 @@ export class Game {
         return [row, col];
     }
 
+    public isTrap(position: coordinates): boolean {
+        const [x, y] = position;
+        const traps = [
+            [2, 2],
+            [2, 5],
+            [5, 2],
+            [5, 5],
+        ];
+
+        return traps.some((trap) => trap[0] === x && trap[1] === y);
+    }
+
     /**
      * Retrieves the piece at the specified position on the board.
      *
