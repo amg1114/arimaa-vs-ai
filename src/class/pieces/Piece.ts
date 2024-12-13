@@ -34,6 +34,9 @@ export class Piece {
      */
     public isFloating: boolean = false;
 
+
+    public active: boolean = false;
+
     constructor(color: ColorPiece, weight: number, position: number[], name: "Rabbit" | "Horse" | "Camel" | "Elephant" | "Dog" | "Cat") {
         this.color = color;
         this.weight = weight;
@@ -111,7 +114,7 @@ export class Piece {
             if (piece.color === this.color) return false;
 
             // If the adjacent piece is heavier, then the piece is freezed
-            if (piece.weight > this.weight) weighterPieces++;
+            if (piece.weight >= this.weight) weighterPieces++;
         }
 
         return weighterPieces > 0;

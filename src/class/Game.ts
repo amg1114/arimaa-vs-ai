@@ -1,4 +1,4 @@
-import { Board } from "../types/game-board";
+import { Board, coordinates } from "../types/game-board";
 import { GameMovement } from "../types/game-movement";
 import { Dog } from "./pieces/Dog";
 import { Elephant } from "./pieces/Elephant";
@@ -11,7 +11,7 @@ import { Player } from "./Player";
 export class Game {
     public turn: "GOLD" | "SILVER" = "GOLD";
     public board: Board;
-    public activeTile: number[] = [];
+    public activeCell: coordinates | null = null;
     public history: GameMovement[] = [];
     public floatingPiece: Piece | null = null;
 
@@ -32,7 +32,7 @@ export class Game {
         this.placePiece(new Rabbit("silver", [1, 0]));
         this.placePiece(new Rabbit("gold", [1, 1]));
         this.placePiece(new Dog("gold", [2, 0]));
-        this.placePiece(new Dog("silver", [2, 1]));
+        // this.placePiece(new Dog("silver", [2, 1]));
         this.placePiece(new Elephant("silver", [6, 3]));
         this.placePiece(new Dog("gold", [5, 3]));
         this.placePiece(new Horse("gold", [6, 2]));
@@ -43,7 +43,7 @@ export class Game {
         this.board[x][y] = piece;
     }
 
-    private getPieceAt(position: number[]): Piece | null {
+    public getPieceAt(position: number[]): Piece | null {
         const [x, y] = position;
         const cell = this.board[x][y];
         return cell instanceof Piece ? cell : null;

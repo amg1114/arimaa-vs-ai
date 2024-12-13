@@ -3,13 +3,14 @@ import "./style.css";
 declare global {
     interface Window {
         game: Game;
-        playerA: Player
+        playerA: Player;
     }
 }
 
 import { Game } from "./class/Game.ts";
 import { Piece } from "./class/pieces/Piece.ts";
 import { Player } from "./class/Player.ts";
+import { disableMenu, enableMenu, showErrorMessage } from "./utils/ui/menu.ts";
 
 // document ready
 var game = new Game();
@@ -23,12 +24,40 @@ const ctx = canvas.getContext("2d")!;
 // Ajustar el tamaño del canvas para alta resolución
 canvas.width = 600;
 canvas.height = 600;
-// ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
 const canvasWidth = canvas.width;
 const canvasHeight = canvas.height;
 
+const cellHeight = canvasHeight / game.board.length;
+const cellWidth = canvasWidth / game.board[0].length;
+
 game.fillBoard();
+
+canvas.addEventListener("click", (event: MouseEvent) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    const col = Math.floor(x / cellWidth);
+    const row = Math.floor(y / cellHeight);
+    const piece = game.getPieceAt([row, col]);
+
+    disableMenu();
+
+    if (piece) {
+        game.activeCell = piece.position;
+
+        if (!piece.isFreezed(game.board)) {
+            enableMenu();
+            return;
+        }
+
+        showErrorMessage("The piece is frozen");
+        return;
+    }
+
+    game.activeCell = null;
+});
 
 function gameLoop() {
     drawBoard();
@@ -43,14 +72,11 @@ function drawBoard() {
     // draw board
     for (let i = 0; i < game.board.length; i++) {
         for (let j = 0; j < game.board[i].length; j++) {
-          
-            const height = canvasHeight / game.board.length;
-            const width = canvasWidth / game.board[i].length;
-            
-           // add index to tile
-           ctx.font = "10px Arial";
-           ctx.fillStyle = "black";
-           ctx.fillText(`${i}, ${j}`, j * width + 5, i * height + 10);
+            // add index to tile
+            ctx.font = "10px Arial";
+            ctx.fillStyle = "white";
+
+            ctx.fillText(`${i}, ${j}`, j * cellWidth + 5, i * cellHeight + 10);
 
             if (game.board[i][j] instanceof Piece) {
                 const piece = game.board[i][j] as Piece;
@@ -58,20 +84,26 @@ function drawBoard() {
 
                 image.src = `/pieces/${piece.color.toLowerCase()}/${piece.name.toLocaleLowerCase()}.svg`;
 
+                if (game.activeCell && game.activeCell[0] === piece.position[0] && game.activeCell[1] === piece.position[1]) {
+                    ctx.fillStyle = "blue";
+                    ctx.fillRect(j * cellWidth, i * cellHeight, cellWidth, cellHeight);
+                }
 
-                ctx.drawImage(image, j * width, i * height, width, height);
+                ctx.drawImage(image, j * cellWidth, i * cellHeight, cellWidth, cellHeight);
             } else {
                 const tile = game.board[i][j] as number;
 
                 if (tile === 1) {
                     ctx.fillStyle = "gray";
-                    ctx.fillRect(j * width, i * height, width, height);
+                    ctx.fillRect(j * cellWidth, i * cellHeight, cellWidth, cellHeight);
                 }
             }
-
-           
         }
     }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    disableMenu();
+});
 
 gameLoop();
