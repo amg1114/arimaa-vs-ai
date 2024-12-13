@@ -206,7 +206,7 @@ export class Piece {
         for (const tile of adjacentTiles) {
             const [x, y] = tile;
 
-            if (this.board[x][y] === 0 || this.board[x][y] === 1) continue;
+            if (this.board[x][y] === 0) continue;
 
             const piece = this.board[x][y] as Piece;
             if (piece.color === this.color || piece.weight > this.weight) continue;
