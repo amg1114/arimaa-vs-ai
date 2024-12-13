@@ -116,6 +116,7 @@ export class Game {
             throw new Error("Invalid movement: The piece can't move to that position");
         }
 
+        this.isMoving = false;
         this.board[fromX][fromY] = 0;
         this.board[toX][toY] = piece;
 
