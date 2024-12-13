@@ -12,6 +12,8 @@ import { Piece } from "./class/pieces/Piece.ts";
 import { Player } from "./class/Player.ts";
 import { pullMovementButton, pushMovementButton, simpleMovementButton, disableMenu, showErrorMessage, hideErrorMessage } from "./utils/ui/menu.ts";
 import { onCellClick, onCellHover, parseOffsetToCoordinates } from "./utils/ui/events.ts";
+import { GameMovement } from "./types/game-movement";
+import { drawCell, drawImage } from "./utils/ui/graphics.ts";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#canvas")!;
 const ctx = canvas.getContext("2d")!;
@@ -24,7 +26,9 @@ canvas.width = canvasWidth;
 canvas.height = canvasHeight;
 
 // document ready
-var game = new Game(canvasHeight, canvasWidth);
+const gPlayer = new Player("gold");
+const sPlayer = new Player("silver");
+var game = new Game(canvasHeight, canvasWidth, gPlayer, sPlayer);
 
 const cellHeight = game.cellHeight;
 const cellWidth = game.cellWidth;
@@ -34,32 +38,37 @@ window.playerA = new Player("silver");
 
 game.fillBoard();
 
+// Canvas Event Listeners
 canvas.addEventListener("click", (event: MouseEvent) => {
     const offset = parseOffsetToCoordinates(event, canvas);
     const cell = game.getCellAt(offset[0], offset[1]);
 
     hideErrorMessage();
 
-    if (game.availableMovements.length){
-        if(game.availableMovements.some((movement) => movement[0] === cell[0] && movement[1] === cell[1])){
-            console.log("Move piece");
-            return;
-        }
+    if (game.isMoving) {
+        const movement: GameMovement = {
+            from: game.activeCell!,
+            to: cell,
+            player: game.currentPlayer,
+        };
 
-        showErrorMessage("Invalid movement");
+        game.simpleMovement(movement);
         return;
     }
 
     onCellClick(event, game, canvas);
-
 });
+
 canvas.addEventListener("mousemove", (event: MouseEvent) => onCellHover(event, game, canvas));
+
+// Controls Event Listeners
 
 simpleMovementButton.addEventListener("click", () => {
     const piece = game.getPieceAt(game.activeCell!);
 
     if (piece) {
         const movements = piece.getAvailableMovements(game.board);
+        game.isMoving = true;
         game.setAvailableMovements(movements);
         // console.log(game.availableMovements);
     }
@@ -91,27 +100,27 @@ function drawBoard() {
                 const image = new Image();
 
                 image.src = `/pieces/${piece.color.toLowerCase()}/${piece.name.toLocaleLowerCase()}.svg`;
-
+                
                 if (game.activeCell && game.activeCell[0] === piece.position[0] && game.activeCell[1] === piece.position[1]) {
-                    ctx.fillStyle = "blue";
-                    ctx.fillRect(j * cellWidth, i * cellHeight, cellWidth, cellHeight);
+                    drawCell(ctx, [j * cellWidth, i * cellHeight], cellWidth, cellHeight, "blue");
+                }
+               
+
+                if(piece.isFreezed(game.board)) {
+                    drawImage(ctx, "/ice.svg", [j * cellWidth, i * cellHeight], cellWidth, cellHeight);
                 }
 
+                drawImage(ctx, image.src, [j * cellWidth, i * cellHeight], cellWidth, cellHeight);
 
-                
-
-                ctx.drawImage(image, j * cellWidth, i * cellHeight, cellWidth, cellHeight);
             } else {
                 const tile = game.board[i][j] as number;
 
                 if (tile === 1) {
-                    ctx.fillStyle = "gray";
-                    ctx.fillRect(j * cellWidth, i * cellHeight, cellWidth, cellHeight);
+                  drawCell(ctx, [j * cellWidth, i * cellHeight], cellWidth, cellHeight, "gray");
                 }
 
                 if (game.availableMovements.some((movement) => movement[0] === i && movement[1] === j)) {
-                    ctx.fillStyle = "green";
-                    ctx.fillRect(j * cellWidth, i * cellHeight, cellWidth, cellHeight);
+                    drawCell(ctx, [j * cellWidth, i * cellHeight], cellWidth, cellHeight, "green");
                 }
             }
 

@@ -35,6 +35,10 @@ export class Piece {
     public isFloating: boolean = false;
 
 
+    /**
+     * Indicates whether the piece is currently active.
+     * @type {boolean}
+     */
     public active: boolean = false;
 
     constructor(color: ColorPiece, weight: number, position: number[], name: "Rabbit" | "Horse" | "Camel" | "Elephant" | "Dog" | "Cat") {

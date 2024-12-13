@@ -1,5 +1,6 @@
 import { Board, coordinates } from "../types/game-board";
 import { GameMovement } from "../types/game-movement";
+import { showErrorMessage } from "../utils/ui/menu";
 import { Dog } from "./pieces/Dog";
 import { Elephant } from "./pieces/Elephant";
 import { Horse } from "./pieces/Horse";
@@ -8,7 +9,10 @@ import { Rabbit } from "./pieces/Rabbit";
 import { Player } from "./Player";
 
 export class Game {
-    public turn: "GOLD" | "SILVER" = "GOLD";
+    public currentPlayer: Player;
+
+    public playerGold: Player;
+    public playerSilver: Player;
 
     public board: Board;
     public cellWidth: number;
@@ -19,14 +23,22 @@ export class Game {
 
     public history: GameMovement[] = [];
     public availableMovements: coordinates[] = [];
+    
+    public isMoving: boolean = false;
+    public isPushing: boolean = false;
+    public isPulling: boolean = false;
 
-    constructor(canvasHeight: number, canvasWidth: number) {
+    constructor(canvasHeight: number, canvasWidth: number, playerGold: Player, playerSilver: Player) {
         this.board = Array(8)
             .fill(null)
             .map(() => Array(8).fill(0));
 
         this.cellHeight = canvasHeight / this.board.length;
         this.cellWidth = canvasWidth / this.board[0].length;
+
+        this.playerGold = playerGold;
+        this.currentPlayer = playerGold;
+        this.playerSilver = playerSilver;
 
         this.initializeTraps();
     }
@@ -70,10 +82,10 @@ export class Game {
 
     /**
      * Moves a piece on the game board according to the provided movement.
-     * 
-     * @param {GameMovement} movement - The movement details including the starting position, 
+     *
+     * @param {GameMovement} movement - The movement details including the starting position,
      *                                  destination position, and the player making the move.
-     * 
+     *
      * @throws {Error} If the movement is invalid due to various reasons such as:
      *                 - Attempting to push a piece without a floating piece.
      *                 - Selecting a piece that doesn't exist.
@@ -146,9 +158,25 @@ export class Game {
         this.board[x][y] = piece;
     }
 
-    private simpleMovement(piece: Piece, to: number[], player: Player, movement: GameMovement): void {
+    public simpleMovement(movement: GameMovement): void {
+        const { from, to, player } = movement;
+        const [fromX, fromY] = from!;
         const [toX, toY] = to;
+        const piece = this.getPieceAt(from!)!;
+
+        if (player.color !== piece.color) {
+            showErrorMessage("Invalid movement: You can't move the opponent's piece");
+            throw new Error("Invalid movement: You can't move the opponent's piece");
+        }
+
+        if (!this.availableMovements.some((movement) => movement[0] === toX && movement[1] === toY)) {
+            showErrorMessage("Invalid movement: The piece can't move to that position");
+            throw new Error("Invalid movement: The piece can't move to that position");
+        }
+
+        this.board[fromX][fromY] = 0;
         this.board[toX][toY] = piece;
+
         piece.position = to;
         this.completeMovement(player, movement);
     }
@@ -175,13 +203,15 @@ export class Game {
 
     private completeMovement(player: Player, movement: GameMovement): void {
         this.history.push(movement);
+        this.availableMovements = [];
+        this.activeCell = null;
+
         player.turns--;
     }
 
     public pullMovement(): void {
         // Implement pull movement logic
     }
-
 
     public setAvailableMovements(movements: coordinates[]): void {
         this.availableMovements = movements;

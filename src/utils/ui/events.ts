@@ -24,6 +24,11 @@ export function onCellClick(event: MouseEvent, game: Game, canvas: HTMLCanvasEle
     disableMenu();
 
     if (piece) {
+        if(piece.color !== game.currentPlayer.color) {
+            showErrorMessage("You can only move your own pieces");
+            return;
+        }
+
         game.activeCell = piece.position;
 
         if (!piece.isFreezed(game.board)) {
@@ -54,7 +59,7 @@ export function onCellHover(event: MouseEvent, game: Game, canvas: HTMLCanvasEle
     const piece = game.getPieceAt(coordinates);
 
     if (piece) {
-        if (piece.isFreezed(game.board)) {
+        if (piece.isFreezed(game.board) || piece.color !== game.currentPlayer.color) {
             canvas.style.cursor = "not-allowed";
             return;
         }
@@ -62,6 +67,8 @@ export function onCellHover(event: MouseEvent, game: Game, canvas: HTMLCanvasEle
         canvas.style.cursor = "pointer";
         return;
     }
+
+    canvas.style.cursor = "default";
 }
 
 
