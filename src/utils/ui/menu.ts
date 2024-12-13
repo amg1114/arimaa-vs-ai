@@ -2,9 +2,9 @@ const DISABLED_BUTTON_CLASS = ["pointer-events-none", "!bg-gray-300", "!text-gra
 
 const errorMessage = document.getElementById("errorMessage")!;
 
-const simpleMovementButton = document.getElementById("btnSimpleMovement")!;
-const pushMovementButton = document.getElementById("btnPushMovement")!;
-const pullMovementButton = document.getElementById("btnPullMovement")!;
+export const simpleMovementButton = document.getElementById("btnSimpleMovement")!;
+export const pushMovementButton = document.getElementById("btnPushMovement")!;
+export const pullMovementButton = document.getElementById("btnPullMovement")!;
 
 export function enableMovement(id: "btnSimpleMovement" | "btnPushMovement" | "btnPullMovement") {
     document.getElementById(id)!.classList.remove(...DISABLED_BUTTON_CLASS);

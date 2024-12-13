@@ -8,6 +8,10 @@ body {
   align-items: center;
   height: 100vh;
   background: #1d1d1d;
+  /* background-image: url("https://www.americadecali.com/cdn/shop/files/logo-05_0dc22c0f-05ad-4774-b78e-d47922c5d864.png?v=1717606020");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain; */
 }
 
 canvas {

@@ -18,7 +18,7 @@ export class Game {
     public floatingPiece: Piece | null = null;
 
     public history: GameMovement[] = [];
-    public avilableMovements: GameMovement[] = [];
+    public availableMovements: coordinates[] = [];
 
     constructor(canvasHeight: number, canvasWidth: number) {
         this.board = Array(8)
@@ -34,8 +34,9 @@ export class Game {
     public fillBoard(): void {
         this.placePiece(new Rabbit("silver", [1, 0]));
         this.placePiece(new Rabbit("gold", [1, 1]));
+        this.placePiece(new Elephant("gold", [1, 2]));
         this.placePiece(new Dog("gold", [2, 0]));
-        // this.placePiece(new Dog("silver", [2, 1]));
+        this.placePiece(new Dog("silver", [2, 1]));
         this.placePiece(new Elephant("silver", [6, 3]));
         this.placePiece(new Dog("gold", [5, 3]));
         this.placePiece(new Horse("gold", [6, 2]));
@@ -80,48 +81,49 @@ export class Game {
      *                 - Performing a push movement without a floating piece.
      */
     public movePiece(movement: GameMovement): void {
-        const { from, to, player } = movement;
-        const [toX, toY] = to;
-        const lastMovement = this.history[this.history.length - 1];
+        return;
+        // const { from, to, player } = movement;
+        // const [toX, toY] = to;
+        // const lastMovement = this.history[this.history.length - 1];
 
-        if (this.floatingPiece && from !== null) {
-            throw new Error("Invalid movement: You must push a piece");
-        }
+        // if (this.floatingPiece && from !== null) {
+        //     throw new Error("Invalid movement: You must push a piece");
+        // }
 
-        if (from) {
-            const piece = this.getPieceAt(from);
-            if (!piece) {
-                throw new Error("Invalid movement: You must select a piece");
-            }
+        // if (from) {
+        //     const piece = this.getPieceAt(from);
+        //     if (!piece) {
+        //         throw new Error("Invalid movement: You must select a piece");
+        //     }
 
-            if (!piece.canMove(to, this.board)) {
-                throw new Error("Invalid movement: The piece can't move to that position");
-            }
+        //     if (!piece.canMove(to, this.board)) {
+        //         throw new Error("Invalid movement: The piece can't move to that position");
+        //     }
 
-            this.board[from[0]][from[1]] = 0; // Remove the selected piece
+        //     this.board[from[0]][from[1]] = 0; // Remove the selected piece
 
-            if (player.color === piece.color && this.board[toX][toY] === 0) {
-                this.simpleMovement(piece, to, player, movement);
-                return;
-            }
+        //     if (player.color === piece.color && this.board[toX][toY] === 0) {
+        //         this.simpleMovement(piece, to, player, movement);
+        //         return;
+        //     }
 
-            if (this.board[toX][toY] instanceof Piece && this.board[toX][toY].color !== player.color) {
-                this.pushMovement(piece, to, player, movement);
-                return;
-            }
-        }
+        //     if (this.board[toX][toY] instanceof Piece && this.board[toX][toY].color !== player.color) {
+        //         this.pushMovement(piece, to, player, movement);
+        //         return;
+        //     }
+        // }
 
-        if (!this.floatingPiece) {
-            throw new Error("Invalid movement: You can't perform a push movement without a floating piece");
-        }
+        // if (!this.floatingPiece) {
+        //     throw new Error("Invalid movement: You can't perform a push movement without a floating piece");
+        // }
 
-        const floatingPiece = this.floatingPiece;
-        if (!floatingPiece.canMove(to, this.board, [lastMovement.to])) {
-            throw new Error("Invalid movement: The piece can't move to that position");
-        }
+        // const floatingPiece = this.floatingPiece;
+        // if (!floatingPiece.canMove(to, this.board, [lastMovement.to])) {
+        //     throw new Error("Invalid movement: The piece can't move to that position");
+        // }
 
-        this.executeFloatingMovement(to);
-        this.completeMovement(player, movement);
+        // this.executeFloatingMovement(to);
+        // this.completeMovement(player, movement);
     }
 
     /**
@@ -178,5 +180,10 @@ export class Game {
 
     public pullMovement(): void {
         // Implement pull movement logic
+    }
+
+
+    public setAvailableMovements(movements: coordinates[]): void {
+        this.availableMovements = movements;
     }
 }

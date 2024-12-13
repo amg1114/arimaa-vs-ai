@@ -1,4 +1,5 @@
 import { Game } from "../../class/Game";
+import { coordinates } from "../../types/game-board";
 import { disableMenu, enableMenu, showErrorMessage } from "./menu";
 
 /**
@@ -15,10 +16,8 @@ import { disableMenu, enableMenu, showErrorMessage } from "./menu";
  * the clicked cell, it sets the active cell to null.
  */
 export function onCellClick(event: MouseEvent, game: Game, canvas: HTMLCanvasElement): void {
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const coordinates = game.getCellAt(x, y);
+    const offset = parseOffsetToCoordinates(event, canvas);
+    const coordinates = game.getCellAt(offset[0], offset[1]);
 
     const piece = game.getPieceAt(coordinates);
 
@@ -63,4 +62,20 @@ export function onCellHover(event: MouseEvent, game: Game, canvas: HTMLCanvasEle
         canvas.style.cursor = "pointer";
         return;
     }
+}
+
+
+/**
+ * Parses the offset of a mouse event to canvas coordinates.
+ *
+ * @param event - The mouse event containing the offset.
+ * @param canvas - The canvas element to calculate the coordinates relative to.
+ * @returns An array containing the x and y coordinates relative to the canvas.
+ */
+export function parseOffsetToCoordinates(event: MouseEvent, canvas: HTMLCanvasElement): coordinates {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    return [x, y];
 }

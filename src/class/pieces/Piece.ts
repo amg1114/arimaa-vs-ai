@@ -65,8 +65,10 @@ export class Piece {
 
         // check if is not moving diagonally
         const adjacentTiles = this.getAdjacentsMovements(to);
-
         if (!adjacentTiles.some((tile) => tile[0] === x && tile[1] === y)) return false;
+
+        // check if is moving to an empty tile
+        if (board[toX][toY] !== 0) return false; 
 
         return true;
     }
@@ -83,13 +85,17 @@ export class Piece {
 
         if (!adjacentTiles.some((tile) => board[tile[0]][tile[1]] === 0)) return false;
 
-        if (this.weight < piece.weight) return false;
+        if(this.color === piece.color) return false;
+
+        if (this.weight <= piece.weight) return false;
 
         return true;
     }
 
     // To Do:
-    // canPull(piece: Piece, board: Board){}
+    canPull(piece: Piece, board: Board): boolean{
+        return  true;
+    }
 
     /**
      * Determines if the piece is frozen on the board.
@@ -140,6 +146,19 @@ export class Piece {
     move() {}
 
     push() {}
+
+    getAvailableMovements(board: Board) {
+        const adjacentTiles = this.getAdjacentsMovements(this.position);
+        let availableMovements: number[][] = [];
+
+        for (const tile of adjacentTiles) {
+            if (this.canMove(tile, board)) {
+                availableMovements.push(tile);
+            }
+        }
+
+        return availableMovements;
+    }
 
     /**
      * Retrieves the pieces that can be pushed by the current piece.
