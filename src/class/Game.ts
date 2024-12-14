@@ -37,22 +37,32 @@ export class Game {
         this.cellWidth = canvasWidth / this.board[0].length;
 
         this.playerGold = playerGold;
-        this.currentPlayer = playerSilver;
+        this.currentPlayer = playerGold;
         this.playerSilver = playerSilver;
 
         this.initializeTraps();
     }
 
     public fillBoard(): void {
-        this.placePiece(new Rabbit("silver", [1, 0], this.board));
-        this.placePiece(new Camel("gold", [1, 1], this.board));
-        this.placePiece(new Dog("gold", [2, 0], this.board));
-        this.placePiece(new Dog("silver", [2, 1], this.board));
-        this.placePiece(new Dog("silver", [2, 1], this.board));
-        this.placePiece(new Camel("silver", [5, 4], this.board));
-        this.placePiece(new Elephant("silver", [6, 3], this.board));
-        this.placePiece(new Dog("gold", [5, 3], this.board));
-        this.placePiece(new Horse("gold", [6, 2], this.board));
+
+        
+        this.placePiece(new Rabbit("gold", [3, 2], this.board));
+        this.placePiece(new Elephant("gold", [4, 3], this.board));
+        
+        
+        this.placePiece(new Rabbit("silver", [3, 1], this.board));
+        this.placePiece(new Rabbit("silver", [3, 3], this.board));
+        this.placePiece(new Camel("silver", [4, 2], this.board));
+        
+        // this.placePiece(new Rabbit("silver", [1, 0], this.board));
+        // this.placePiece(new Camel("gold", [1, 1], this.board));
+        // this.placePiece(new Dog("gold", [2, 0], this.board));
+        // this.placePiece(new Dog("silver", [2, 1], this.board));
+        // this.placePiece(new Dog("silver", [2, 1], this.board));
+        // this.placePiece(new Camel("silver", [5, 4], this.board));
+        // this.placePiece(new Elephant("silver", [6, 3], this.board));
+        // this.placePiece(new Dog("gold", [5, 3], this.board));
+        // this.placePiece(new Rabbit("gold", [6, 2], this.board));
     }
 
     public randomFill(): void {
@@ -305,24 +315,86 @@ export class Game {
         this.availableMovements = [];
         this.activeCell = null;
 
-        if (!skipDisableMove) {
-            this.isMoving = false;
-        }
-
         player.turns--;
 
         if (player.turns === 0) {
             this.switchPlayer();
         }
 
-        this.deleteTrappedPieces();
+        if (!skipDisableMove) {
+            this.isMoving = false;
+            this.deleteTrappedPieces();
+            this.checkGameEnd();
+        }
+    }
+
+    public checkGameEnd(): void {
+        this.checkWinByRabbitsAtEnd();
+        this.checkWinByRabbitsTrapped();
+        this.checkWinByImmobilization();
+    }
+
+    private checkWinByRabbitsAtEnd(): void {
+        const goldenRabbits = this.board[0].some((cell) => {
+            return cell instanceof Rabbit && cell.color === "silver";
+        });
+
+        if (goldenRabbits) console.log("Gold wins! Golden rabbits reached the end.");
+
+        const silverRabbits = this.board[this.board.length - 1].some((cell) => {
+            return cell instanceof Rabbit && cell.color === "gold";
+        });
+
+        if (silverRabbits) console.log("Silver wins! Silver rabbits reached the end.");
+    }
+
+    private checkWinByRabbitsTrapped(): void {
+        const pieces = this.getAllPieces();
+
+        const goldenRabbits = pieces.some((cell) => {
+            return cell instanceof Rabbit && cell.color === "gold";
+        });
+
+        if (!goldenRabbits) console.log("Silver wins! Gold rabbits are trapped.");
+
+        const silverRabbits = pieces.some((cell) => {
+            return cell instanceof Rabbit && cell.color === "silver";
+        });
+
+        if (!silverRabbits) console.log("Gold wins! Silver rabbits are trapped.");
+    }
+
+    private checkWinByImmobilization(): void {
+        const pieces = this.getAllPieces();
+
+        const ableGoldPieces = pieces.some((cell) => {
+            if (cell.color === "silver") return false;
+            const adjacents = cell.getAvailableMovements();
+            const pulls = cell.getPullablePieces();
+            const pushes = cell.getPushablePieces();
+
+            return adjacents.length && pulls.length && pushes.length;
+        });
+
+        if (!ableGoldPieces) console.log("Silver wins! Gold pieces are immobilized.");
+
+        const ableSilverPieces = pieces.some((cell) => {
+            if (cell.color === "gold") return false;
+            const adjacents = cell.getAvailableMovements();
+            const pulls = cell.getPullablePieces();
+            const pushes = cell.getPushablePieces();
+
+            return adjacents.length && pulls.length && pushes.length;
+        });
+
+        if (!ableSilverPieces) console.log("Gold wins! Silver pieces are immobilized.");
     }
 
     /**
      * Checks if any piece is trapped on the board and updates the board state accordingly.
      * A piece is considered trapped if it is on a trap tile and there are no adjacent tiles
      * occupied by pieces of the same color as the current player.
-     * 
+     *
      * This method iterates over all trap tiles on the board, checks if there is a piece
      * on each trap, and then checks the adjacent tiles to determine if the piece is trapped.
      * If a piece is trapped, the corresponding board position is updated.
@@ -336,8 +408,10 @@ export class Game {
                 const adjacentCells = piece.getAdjacentsMovements([x, y]);
                 if (
                     !adjacentCells.some((tile) => {
-                        const piece = this.getPieceAt(tile);
-                        return piece && piece.color === this.currentPlayer.color;
+                        const cPiece = this.getPieceAt(tile);
+                        
+                        // console.log("piece", piece);
+                        return cPiece && cPiece.color === piece.color;
                     })
                 ) {
                     this.board[x][y] = 1;
@@ -370,6 +444,10 @@ export class Game {
             [5, 2],
             [5, 5],
         ];
+    }
+
+    private getAllPieces(): Piece[] {
+        return this.board.flat().filter((cell) => cell instanceof Piece) as Piece[];
     }
 
     /**

@@ -110,7 +110,7 @@ pullMovementButton.addEventListener("click", () => {
         showErrorMessage("You need to play at least 2 turns before pushing a piece");
         throw new Error("You need to play at least 2 turns before pushing a piece");
     }
-    
+
     const piece = game.getPieceAt(game.activeCell!);
     if (piece) {
         const movements = piece.getPullablePieces();
@@ -180,9 +180,9 @@ function drawBoard() {
             ctx.fillStyle = CELL_TEXT_COLOR;
 
             if (j === 0) {
-                ctx.fillText(`${i}`, j * cellWidth + 5, i * cellHeight + 10);
+                ctx.fillText(`${i }`, j * cellWidth + 5, i * cellHeight + 10);
             } else if (i === 0) {
-                ctx.fillText(`${j}`, j * cellWidth + 5, i * cellHeight + 10);
+                ctx.fillText(`${j }`, j * cellWidth + 5, i * cellHeight + 10);
             }
         }
     }
