@@ -44,22 +44,12 @@ export class Game {
     }
 
     public fillBoard(): void {
-        this.placePiece(new Rabbit("gold", [3, 2], this.board));
+        // this.placePiece(new Rabbit("gold", [3, 2], this.board));
         this.placePiece(new Elephant("gold", [4, 3], this.board));
 
         this.placePiece(new Rabbit("silver", [3, 1], this.board));
-        this.placePiece(new Rabbit("silver", [3, 3], this.board));
+        this.placePiece(new Rabbit("gold", [3, 3], this.board));
         this.placePiece(new Camel("silver", [4, 2], this.board));
-
-        // this.placePiece(new Rabbit("silver", [1, 0], this.board));
-        // this.placePiece(new Camel("gold", [1, 1], this.board));
-        // this.placePiece(new Dog("gold", [2, 0], this.board));
-        // this.placePiece(new Dog("silver", [2, 1], this.board));
-        // this.placePiece(new Dog("silver", [2, 1], this.board));
-        // this.placePiece(new Camel("silver", [5, 4], this.board));
-        // this.placePiece(new Elephant("silver", [6, 3], this.board));
-        // this.placePiece(new Dog("gold", [5, 3], this.board));
-        // this.placePiece(new Rabbit("gold", [6, 2], this.board));
     }
 
     public randomFill(): void {
@@ -314,14 +304,14 @@ export class Game {
 
         player.turns--;
 
-        if (player.turns === 0) {
-            this.switchPlayer();
-        }
-
         if (!skipDisableMove) {
             this.isMoving = false;
             this.deleteTrappedPieces();
             this.checkGameEnd();
+        }
+
+        if (player.turns === 0) {
+            this.switchPlayer();
         }
     }
 
@@ -332,17 +322,21 @@ export class Game {
     }
 
     private checkWinByRabbitsAtEnd(): void {
-        const goldenRabbits = this.board[0].some((cell) => {
-            return cell instanceof Rabbit && cell.color === "silver";
-        });
+        if (this.currentPlayer.color === "gold" && this.currentPlayer.turns === 0) {
+            const goldenRabbits = this.board[0].some((cell) => {
+                return cell instanceof Rabbit && cell.color === "gold";
+            });
 
-        if (goldenRabbits) alert("Gold wins! Golden rabbits reached the end.");
+            if (goldenRabbits) alert("Gold wins! Golden rabbits reached the end.");
+        }
 
-        const silverRabbits = this.board[this.board.length - 1].some((cell) => {
-            return cell instanceof Rabbit && cell.color === "gold";
-        });
+        if (this.currentPlayer.color === "silver" && this.currentPlayer.turns === 0) {
+            const silverRabbits = this.board[this.board.length - 1].some((cell) => {
+                return cell instanceof Rabbit && cell.color === "silver";
+            });
 
-        if (silverRabbits) alert("Silver wins! Silver rabbits reached the end.");
+            if (silverRabbits) alert("Silver wins! Silver rabbits reached the end.");
+        }
     }
 
     private checkWinByRabbitsTrapped(): void {
