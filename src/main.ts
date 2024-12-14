@@ -159,10 +159,10 @@ function drawBoard() {
                 const image = new Image();
                 image.src = piece.icon;
 
+                drawImage(ctx, image.src, [cX, cY], cellWidth, cellHeight);
                 if (piece.isFreezed()) {
                     drawImage(ctx, "ice-cell.png", [cX, cY], cellWidth, cellHeight);
                 }
-                drawImage(ctx, image.src, [cX, cY], cellWidth, cellHeight);
             }
 
             // add index to tile

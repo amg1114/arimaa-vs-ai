@@ -1,7 +1,7 @@
 import { coordinates } from "../../types/game-board";
 
 export const WHITE_CELL_COLOR = "#fffcf2";
-export const BLACK_CELL_COLOR = "#E0DFD5";
+export const BLACK_CELL_COLOR = "#ffe6a7";
 export const TRAP_CELL_COLOR = "#DE3C4B";
 export const CELL_TEXT_COLOR = "#38302e";
 export const SELECTED_CELL_COLOR = "#1269B5";
@@ -29,11 +29,7 @@ export function drawCell(ctx: CanvasRenderingContext2D, coordinates: coordinates
 
 export function drawSelectedCell(ctx: CanvasRenderingContext2D, coordinates: coordinates, width: number, height: number) {
     const [x, y] = coordinates;
-    ctx.beginPath();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = SELECTED_CELL_COLOR;
-    ctx.rect(x, y, width, height);
-    ctx.stroke();
-
-    ctx.closePath();
+    const img = new Image();
+    img.src = "selected-cell.svg";
+    ctx.drawImage(img, x, y, width, height);
 }
