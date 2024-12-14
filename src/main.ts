@@ -6,7 +6,7 @@ import { Player } from "./class/Player.ts";
 
 import { GameMovement } from "./types/game-movement";
 
-import { pullMovementButton, pushMovementButton, simpleMovementButton, disableMenu } from "./utils/ui/menu.ts";
+import { pullMovementButton, pushMovementButton, simpleMovementButton, disableMenu, showErrorMessage } from "./utils/ui/menu.ts";
 import { onCellClick, onCellHover, parseOffsetToCoordinates } from "./utils/ui/events.ts";
 
 import { BLACK_CELL_COLOR, CELL_TEXT_COLOR, drawCell, drawImage, drawSelectedCell, TRAP_CELL_COLOR, WHITE_CELL_COLOR } from "./utils/ui/graphics.ts";
@@ -92,6 +92,11 @@ simpleMovementButton.addEventListener("click", () => {
 });
 
 pushMovementButton.addEventListener("click", () => {
+    if (game.currentPlayer.turns < 2) {
+        showErrorMessage("You need to play at least 2 turns before pushing a piece");
+        throw new Error("You need to play at least 2 turns before pushing a piece");
+    }
+
     const piece = game.getPieceAt(game.activeCell!);
     if (piece) {
         const movements = piece.getPushablePieces();
@@ -101,6 +106,11 @@ pushMovementButton.addEventListener("click", () => {
 });
 
 pullMovementButton.addEventListener("click", () => {
+    if (game.currentPlayer.turns < 2) {
+        showErrorMessage("You need to play at least 2 turns before pushing a piece");
+        throw new Error("You need to play at least 2 turns before pushing a piece");
+    }
+    
     const piece = game.getPieceAt(game.activeCell!);
     if (piece) {
         const movements = piece.getPullablePieces();
