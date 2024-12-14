@@ -333,9 +333,9 @@ export class Game {
             const piece = this.getPieceAt(trap);
 
             if (piece) {
-                const adjacentTiles = piece.getAdjacentsMovements([x, y]);
+                const adjacentCells = piece.getAdjacentsMovements([x, y]);
                 if (
-                    !adjacentTiles.some((tile) => {
+                    !adjacentCells.some((tile) => {
                         const piece = this.getPieceAt(tile);
                         return piece && piece.color === this.currentPlayer.color;
                     })
