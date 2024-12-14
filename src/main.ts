@@ -61,6 +61,12 @@ canvas.addEventListener("click", (event: MouseEvent) => {
             } else {
                 game.pushPiece(movement);
             }
+        } else if (game.isMoving === "pull") {
+            if (!game.floatingPiece) {
+                game.pullMovement(movement);
+            } else {
+                game.pullPiece(movement);
+            }
         }
 
         disableMenu();
@@ -90,13 +96,17 @@ pushMovementButton.addEventListener("click", () => {
     if (piece) {
         const movements = piece.getPushablePieces();
         game.isMoving = "push";
-        console.log(movements);
         game.setAvailableMovements(movements);
     }
 });
 
 pullMovementButton.addEventListener("click", () => {
-    console.log("Pull Movement");
+    const piece = game.getPieceAt(game.activeCell!);
+    if (piece) {
+        const movements = piece.getPullablePieces();
+        game.isMoving = "pull";
+        game.setAvailableMovements(movements);
+    }
 });
 
 function gameLoop() {
@@ -164,7 +174,6 @@ function drawBoard() {
             } else if (i === 0) {
                 ctx.fillText(`${j}`, j * cellWidth + 5, i * cellHeight + 10);
             }
-            // ctx.fillText(`${i}, ${j}`, j * cellWidth + 5, i * cellHeight + 10);
         }
     }
 

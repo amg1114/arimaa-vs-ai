@@ -11,7 +11,7 @@ export class Piece {
      * @type {ColorPiece}
      */
     public color: ColorPiece;
-    
+
     /**
      * The icon path of the piece.
      *
@@ -178,10 +178,10 @@ export class Piece {
         let availableMovements: AvailableMovement[] = [];
 
         for (const tile of adjacentTiles) {
-            if (this.canMove(tile) || allowTraps && this.board[tile[0]][tile[1]] === 1) {
+            if (this.canMove(tile) || (allowTraps && this.board[tile[0]][tile[1]] === 1)) {
                 availableMovements.push({
                     coordinates: tile,
-                    type: "simple"
+                    type: "simple",
                 });
             }
         }
@@ -213,7 +213,7 @@ export class Piece {
 
             pushablePieces.push({
                 coordinates: piece.position,
-                type: "push"
+                type: "push",
             });
         }
 
@@ -226,11 +226,11 @@ export class Piece {
      * is not of the same color, and has a weight less than the current piece.
      *
      * @param {Board} board - The current state of the game this.board.
-     * @returns {Piece[]} An array of pieces that can be pulled by the current piece.
+     * @returns {AvailableMovement[]} An array of pieces that can be pulled by the current piece.
      */
-    getPullablePieces() {
+    getPullablePieces(): AvailableMovement[] {
         const adjacentTiles = this.getAdjacentsMovements(this.position);
-        let pullablePieces: Piece[] = [];
+        let pullablePieces: AvailableMovement[] = [];
 
         if (adjacentTiles.some((tile) => this.board[tile[0]][tile[1]] === 0)) {
             for (const tile of adjacentTiles) {
@@ -241,10 +241,12 @@ export class Piece {
                 const piece = this.board[x][y] as Piece;
                 if (piece.color === this.color || piece.weight > this.weight) continue;
 
-                pullablePieces.push(piece);
+                pullablePieces.push({
+                    coordinates: piece.position,
+                    type: "pull",
+                });
             }
-
-            return pullablePieces;
         }
+        return pullablePieces;
     }
 }
