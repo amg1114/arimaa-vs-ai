@@ -89,7 +89,7 @@ export class Piece {
         if (!adjacentTiles.some((tile) => tile[0] === x && tile[1] === y)) return false;
 
         // check if is moving to an empty tile
-        if (this.board[toX][toY] !== 0) return false;
+        if (this.board[toX][toY] instanceof Piece ) return false;
 
         return true;
     }
@@ -173,12 +173,12 @@ export class Piece {
      * @param board - The current state of the board.
      * @returns An array of coordinates representing the available movements.
      */
-    getAvailableMovements(allowTraps = false) {
+    getAvailableMovements() {
         const adjacentTiles = this.getAdjacentsMovements(this.position);
         let availableMovements: AvailableMovement[] = [];
 
         for (const tile of adjacentTiles) {
-            if (this.canMove(tile) || (allowTraps && this.board[tile[0]][tile[1]] === 1)) {
+            if (this.canMove(tile)) {
                 availableMovements.push({
                     coordinates: tile,
                     type: "simple",

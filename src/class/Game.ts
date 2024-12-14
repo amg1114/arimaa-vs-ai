@@ -49,6 +49,7 @@ export class Game {
         this.placePiece(new Dog("gold", [2, 0], this.board));
         this.placePiece(new Dog("silver", [2, 1], this.board));
         this.placePiece(new Dog("silver", [2, 1], this.board));
+        this.placePiece(new Camel("silver", [5, 4], this.board));
         this.placePiece(new Elephant("silver", [6, 3], this.board));
         this.placePiece(new Dog("gold", [5, 3], this.board));
         this.placePiece(new Horse("gold", [6, 2], this.board));
@@ -203,7 +204,7 @@ export class Game {
         this.floatingPiece = enemyPiece;
 
         this.completeMovement(player, movement, true);
-        this.availableMovements = enemyPiece.getAvailableMovements(true);
+        this.availableMovements = enemyPiece.getAvailableMovements();
     }
 
     /**
@@ -251,7 +252,7 @@ export class Game {
         this.floatingPiece = enemyPiece;
 
         this.completeMovement(player, movement, true);
-        this.availableMovements = piece.getAvailableMovements(true);
+        this.availableMovements = piece.getAvailableMovements();
         this.activeCell = from;
     }
 
@@ -313,21 +314,62 @@ export class Game {
         if (player.turns === 0) {
             this.switchPlayer();
         }
+
+        this.deleteTrappedPieces();
+    }
+
+    /**
+     * Checks if any piece is trapped on the board and updates the board state accordingly.
+     * A piece is considered trapped if it is on a trap tile and there are no adjacent tiles
+     * occupied by pieces of the same color as the current player.
+     * 
+     * This method iterates over all trap tiles on the board, checks if there is a piece
+     * on each trap, and then checks the adjacent tiles to determine if the piece is trapped.
+     * If a piece is trapped, the corresponding board position is updated.
+     */
+    private deleteTrappedPieces() {
+        this.getTraps().forEach((trap) => {
+            const [x, y] = trap;
+            const piece = this.getPieceAt(trap);
+
+            if (piece) {
+                const adjacentTiles = piece.getAdjacentsMovements([x, y]);
+                if (
+                    !adjacentTiles.some((tile) => {
+                        const piece = this.getPieceAt(tile);
+                        return piece && piece.color === this.currentPlayer.color;
+                    })
+                ) {
+                    this.board[x][y] = 1;
+                }
+            }
+        });
     }
 
     /**
      * Initializes traps on the game board by setting specific positions to 1.
      * The traps are placed at the following coordinates:
-     * - (2, 2)
-     * - (2, 5)
-     * - (5, 2)
-     * - (5, 5)
-     *
      * @private
      */
     private initializeTraps(): void {
-        this.board[2][2] = this.board[2][5] = 1;
-        this.board[5][2] = this.board[5][5] = 1;
+        this.getTraps().forEach((trap) => {
+            const [x, y] = trap;
+            this.board[x][y] = 1;
+        });
+    }
+
+    /**
+     * Retrieves the coordinates of the traps in the game.
+     *
+     * @returns {coordinates[]} An array of coordinates where each coordinate is represented as a tuple [x, y].
+     */
+    private getTraps(): coordinates[] {
+        return [
+            [2, 2],
+            [2, 5],
+            [5, 2],
+            [5, 5],
+        ];
     }
 
     /**
@@ -341,6 +383,12 @@ export class Game {
         this.board[x][y] = piece;
     }
 
+    /**
+     * Switches the current player to the other player and resets their turn count to 4.
+     * Updates the game turn with the new current player's color.
+     *
+     * @private
+     */
     private switchPlayer(): void {
         this.currentPlayer.turns = 4;
         this.currentPlayer = this.currentPlayer === this.playerGold ? this.playerSilver : this.playerGold;
