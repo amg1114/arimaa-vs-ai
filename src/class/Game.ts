@@ -232,7 +232,6 @@ export class Game {
     }
 
     public pullPiece(movement: GameMovement): void {
-        console.log(movement);
         const { from, to, player } = movement;
         const [fromX, fromY] = from!;
         const [toX, toY] = to;
