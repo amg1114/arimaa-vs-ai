@@ -106,18 +106,6 @@ export class Game {
         return [row, col];
     }
 
-    public isTrap(position: coordinates): boolean {
-        const [x, y] = position;
-        const traps = [
-            [2, 2],
-            [2, 5],
-            [5, 2],
-            [5, 5],
-        ];
-
-        return traps.some((trap) => trap[0] === x && trap[1] === y);
-    }
-
     /**
      * Retrieves the piece at the specified position on the board.
      *
@@ -131,25 +119,41 @@ export class Game {
     }
 
     /**
-     * Initializes traps on the game board by setting specific positions to 1.
-     * The traps are placed at the following coordinates:
-     * - (2, 2)
-     * - (2, 5)
-     * - (5, 2)
-     * - (5, 5)
+     * Checks if the given position is a trap.
      *
-     * @private
+     * @param position - The coordinates to check, represented as a tuple [x, y].
+     * @returns `true` if the position is a trap, `false` otherwise.
      */
-    private initializeTraps(): void {
-        this.board[2][2] = this.board[2][5] = 1;
-        this.board[5][2] = this.board[5][5] = 1;
+    public isTrap(position: coordinates): boolean {
+        const [x, y] = position;
+        const traps = [
+            [2, 2],
+            [2, 5],
+            [5, 2],
+            [5, 5],
+        ];
+
+        return traps.some((trap) => trap[0] === x && trap[1] === y);
     }
 
-    private placePiece(piece: Piece): void {
-        const [x, y] = piece.position;
-        this.board[x][y] = piece;
+    /**
+     * Sets the available movements for the game.
+     *
+     * @param movements - An array of AvailableMovement objects representing the possible movements.
+     */
+    public setAvailableMovements(movements: AvailableMovement[]): void {
+        this.availableMovements = movements;
     }
 
+    /**
+     * Handles a simple movement of a game piece from one position to another.
+     *
+     * @param movement - The movement details including the starting position, 
+     *                   ending position, and the player making the move.
+     * 
+     * @throws {Error} If the player attempts to move an opponent's piece.
+     * @throws {Error} If the movement is not valid according to the available movements.
+     */
     public simpleMovement(movement: GameMovement): void {
         const { from, to, player } = movement;
         const [fromX, fromY] = from!;
@@ -174,6 +178,12 @@ export class Game {
         this.completeMovement(player, movement);
     }
 
+    /**
+     * Pushes a movement to the game state.
+     *
+     * @param movement - The movement to be pushed, containing the starting position, ending position, and the player making the move.
+     * @throws Will throw an error if the movement is invalid (i.e., the piece cannot move to the specified position).
+     */
     public pushMovement(movement: GameMovement): void {
         const { from, to, player } = movement;
         const [fromX, fromY] = from!;
@@ -196,6 +206,12 @@ export class Game {
         this.availableMovements = enemyPiece.getAvailableMovements(true);
     }
 
+    /**
+     * Pushes a piece to a new position on the board.
+     *
+     * @param {PushMovement} movement - The movement details including the target position and the player making the move.
+     * @throws {Error} Throws an error if the movement is invalid.
+     */
     public pushPiece(movement: PushMovement): void {
         const { to, player } = movement;
         const [toX, toY] = to;
@@ -213,6 +229,14 @@ export class Game {
         this.completeMovement(player, movement);
     }
 
+    /**
+     * Executes a movement in the game.
+     *
+     * @param movement - The movement to be executed, containing the starting position, 
+     *                   ending position, and the player making the move.
+     * 
+     * @throws {Error} If the movement is invalid and the piece cannot move to the specified position.
+     */
     public pullMovement(movement: GameMovement): void {
         const { from, to, player } = movement;
         const [toX, toY] = to;
@@ -231,6 +255,14 @@ export class Game {
         this.activeCell = from;
     }
 
+    /**
+     * Moves a piece from one position to another on the game board.
+     * 
+     * @param movement - The movement details including the starting position, 
+     *                   ending position, and the player making the move.
+     * 
+     * @throws {Error} If the movement is invalid and the piece cannot move to the specified position.
+     */
     public pullPiece(movement: GameMovement): void {
         const { from, to, player } = movement;
         const [fromX, fromY] = from!;
@@ -253,6 +285,20 @@ export class Game {
         this.completeMovement(player, movement);
     }
 
+    /**
+     * Completes the movement of a player in the game.
+     *
+     * @param player - The player who is making the movement.
+     * @param movement - The movement being made by the player, which can be either a GameMovement or a PushMovement.
+     * @param skipDisableMove - Optional parameter to skip disabling the move. Defaults to false.
+     * 
+     * This method performs the following actions:
+     * - Adds the movement to the history.
+     * - Clears the available movements.
+     * - Resets the active cell.
+     * - If `skipDisableMove` is not true, sets the `isMoving` flag to false.
+     * - Decrements the player's remaining turns.
+     */
     private completeMovement(player: Player, movement: GameMovement | PushMovement, skipDisableMove = false): void {
         this.history.push(movement);
         this.availableMovements = [];
@@ -265,7 +311,29 @@ export class Game {
         player.turns--;
     }
 
-    public setAvailableMovements(movements: AvailableMovement[]): void {
-        this.availableMovements = movements;
+    /**
+     * Initializes traps on the game board by setting specific positions to 1.
+     * The traps are placed at the following coordinates:
+     * - (2, 2)
+     * - (2, 5)
+     * - (5, 2)
+     * - (5, 5)
+     *
+     * @private
+     */
+    private initializeTraps(): void {
+        this.board[2][2] = this.board[2][5] = 1;
+        this.board[5][2] = this.board[5][5] = 1;
+    }
+
+    /**
+     * Places a piece on the game board at the specified position.
+     *
+     * @param piece - The piece to be placed on the board. The piece object should contain a position property,
+     *                which is a tuple [x, y] representing the coordinates on the board.
+     */
+    private placePiece(piece: Piece): void {
+        const [x, y] = piece.position;
+        this.board[x][y] = piece;
     }
 }
