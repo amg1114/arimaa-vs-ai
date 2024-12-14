@@ -45,7 +45,7 @@ export class Game {
 
     public fillBoard(): void {
         this.placePiece(new Rabbit("silver", [1, 0], this.board));
-        this.placePiece(new Rabbit("gold", [1, 1], this.board));
+        this.placePiece(new Camel("gold", [1, 1], this.board));
         this.placePiece(new Dog("gold", [2, 0], this.board));
         this.placePiece(new Dog("silver", [2, 1], this.board));
         this.placePiece(new Dog("silver", [2, 1], this.board));
@@ -193,7 +193,7 @@ export class Game {
         this.floatingPiece = enemyPiece;
 
         this.completeMovement(player, movement, true);
-        this.availableMovements = enemyPiece.getAvailableMovements();
+        this.availableMovements = enemyPiece.getAvailableMovements(true);
     }
 
     public pushPiece(movement: PushMovement): void {

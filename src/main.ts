@@ -90,7 +90,7 @@ pushMovementButton.addEventListener("click", () => {
     if (piece) {
         const movements = piece.getPushablePieces();
         game.isMoving = "push";
-
+        console.log(movements);
         game.setAvailableMovements(movements);
     }
 });
