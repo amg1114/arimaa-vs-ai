@@ -4,38 +4,68 @@
         <meta charset="UTF-8" />
         <link rel="icon" type="image/svg+xml" href="/vite.svg" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Vite + TS</title>
-
+        <title>Arimaa vs AI</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap"
+            rel="stylesheet"
+        />
         <style></style>
     </head>
-    <body>
+    <body class="bg-amber-100">
         <main class="flex flex-col gap-8">
-            <h2 class="text-center text-red-500 font-bold">PERDIMO MUCHACHO</h2>
-            <canvas id="canvas"></canvas>
-            <div class="flex flex-wrap justify-center gap-4">
-                <span class="text-red-500 font-bold w-full text-center hidden" id="errorMessage"></span>
-                <button
-                    type="button"
-                    id="btnSimpleMovement"
-                    class="hover:bg-red-500 hover:text-white px-2 py-1.5 rounded bg-red-200 text-red-500 transition-colors"
-                >
-                    Movement Simple
-                </button>
-                <button
-                    type="button"
-                    id="btnPushMovement"
-                    class="hover:bg-red-500 hover:text-white px-2 py-1.5 rounded bg-red-200 text-red-500 transition-colors"
-                >
-                    Push Movement
-                </button>
-                <button
-                    type="button"
-                    id="btnPullMovement"
-                    class="hover:bg-red-500 hover:text-white px-2 py-1.5 rounded bg-red-200 text-red-500 transition-colors"
-                >
-                    Pull Movement
-                </button>
-            </div>
+            <h2 class="relative flex flex-col items-center font-bungee text-8xl text-center text-orange-800">
+                Arimaa
+                <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[60px] text-amber-500">- VS -</span>
+                AI
+            </h2>
+            <section class="border-[15px] border-amber-950 rounded-lg overflow-hidden">
+                <canvas id="canvas"></canvas>
+            </section>
+            <footer class="flex flex-wrap justify-between gap-4">
+                <div class="flex">
+                    <button
+                        type="button"
+                        id="btnSimpleMovement"
+                        class="hover:bg-amber-950 hover:text-white px-2 py-1.5 rounded-s bg-yellow-400 text-yellow-700 transition-colors"
+                    >
+                        Movement Simple
+                    </button>
+                    <button
+                        type="button"
+                        id="btnPushMovement"
+                        class="hover:bg-amber-950 hover:text-white px-2 py-1.5 bg-yellow-400 text-yellow-700 transition-colors"
+                    >
+                        Push Movement
+                    </button>
+                    <button
+                        type="button"
+                        id="btnPullMovement"
+                        class="hover:bg-amber-950 hover:text-white px-2 py-1.5 rounded-e bg-yellow-400 text-yellow-700 transition-colors"
+                    >
+                        Pull Movement
+                    </button>
+                </div>
+
+                <div class="flex flex-col items-center players-indicator">
+                    <figure>
+                        <?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+                        <svg id="turn-indicator" width="40px" height="40px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M5 21C5 17.134 8.13401 14 12 14C15.866 14 19 17.134 19 21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
+                                class="text-silver-cell stroke-current fill-current"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                    </figure>
+                    <div class="flex flex-col gap-1 ">
+                        <span class="text-amber-500 font-bungee">Player</span>
+                    </div>
+                </div>
+            </footer>
         </main>
         <div id="toast-container" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 space-y-4"></div>
         <script type="module" src="/src/main.ts"></script>

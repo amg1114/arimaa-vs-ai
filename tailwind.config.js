@@ -5,7 +5,12 @@ export default {
         extend: {
             colors:{
                 "white-cell": "#fffcf2",
-                "yellow-cell": "#ffe6a7",
+                "yellow-cell": "rgb(255, 214, 111)",
+                "silver-cell": "#b9b9b9",
+                "gold-cell": "#eed602",
+            },
+            fontFamily: {
+                "bungee": ["Bungee", "cursive"],
             }
         },
     },

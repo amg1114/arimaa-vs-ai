@@ -1,6 +1,6 @@
 import { Board, coordinates } from "../types/game-board";
 import { AvailableMovement, GameMovement, PushMovement } from "../types/game-movement";
-import { showErrorMessage } from "../utils/ui/menu";
+import { showErrorMessage, updateGameTurn } from "../utils/ui/menu";
 import { Camel } from "./pieces/Camel";
 import { Cat } from "./pieces/Cat";
 import { Dog } from "./pieces/Dog";
@@ -148,9 +148,9 @@ export class Game {
     /**
      * Handles a simple movement of a game piece from one position to another.
      *
-     * @param movement - The movement details including the starting position, 
+     * @param movement - The movement details including the starting position,
      *                   ending position, and the player making the move.
-     * 
+     *
      * @throws {Error} If the player attempts to move an opponent's piece.
      * @throws {Error} If the movement is not valid according to the available movements.
      */
@@ -232,9 +232,9 @@ export class Game {
     /**
      * Executes a movement in the game.
      *
-     * @param movement - The movement to be executed, containing the starting position, 
+     * @param movement - The movement to be executed, containing the starting position,
      *                   ending position, and the player making the move.
-     * 
+     *
      * @throws {Error} If the movement is invalid and the piece cannot move to the specified position.
      */
     public pullMovement(movement: GameMovement): void {
@@ -257,10 +257,10 @@ export class Game {
 
     /**
      * Moves a piece from one position to another on the game board.
-     * 
-     * @param movement - The movement details including the starting position, 
+     *
+     * @param movement - The movement details including the starting position,
      *                   ending position, and the player making the move.
-     * 
+     *
      * @throws {Error} If the movement is invalid and the piece cannot move to the specified position.
      */
     public pullPiece(movement: GameMovement): void {
@@ -291,7 +291,7 @@ export class Game {
      * @param player - The player who is making the movement.
      * @param movement - The movement being made by the player, which can be either a GameMovement or a PushMovement.
      * @param skipDisableMove - Optional parameter to skip disabling the move. Defaults to false.
-     * 
+     *
      * This method performs the following actions:
      * - Adds the movement to the history.
      * - Clears the available movements.
@@ -309,6 +309,10 @@ export class Game {
         }
 
         player.turns--;
+
+        if (player.turns === 0) {
+            this.switchPlayer();
+        }
     }
 
     /**
@@ -335,5 +339,11 @@ export class Game {
     private placePiece(piece: Piece): void {
         const [x, y] = piece.position;
         this.board[x][y] = piece;
+    }
+
+    private switchPlayer(): void {
+        this.currentPlayer.turns = 4;
+        this.currentPlayer = this.currentPlayer === this.playerGold ? this.playerSilver : this.playerGold;
+        updateGameTurn(this.currentPlayer.color);
     }
 }

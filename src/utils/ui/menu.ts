@@ -22,6 +22,12 @@ export function disableMenu() {
     pullMovementButton.classList.add(...DISABLED_BUTTON_CLASS);
 }
 
+export function updateGameTurn(turn: "gold" | "silver") {
+    const turnIndicator = document.getElementById("turn-indicator")!.querySelector("path")!;
+    turnIndicator.classList.replace(turn === "gold" ? "text-silver-cell" : "text-gold-cell", turn === "gold" ? "text-gold-cell" : "text-silver-cell");
+
+}
+
 export function showErrorMessage(message: string) {
     const toastContainer = document.getElementById("toast-container");
 
