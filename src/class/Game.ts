@@ -44,16 +44,13 @@ export class Game {
     }
 
     public fillBoard(): void {
-
-        
         this.placePiece(new Rabbit("gold", [3, 2], this.board));
         this.placePiece(new Elephant("gold", [4, 3], this.board));
-        
-        
+
         this.placePiece(new Rabbit("silver", [3, 1], this.board));
         this.placePiece(new Rabbit("silver", [3, 3], this.board));
         this.placePiece(new Camel("silver", [4, 2], this.board));
-        
+
         // this.placePiece(new Rabbit("silver", [1, 0], this.board));
         // this.placePiece(new Camel("gold", [1, 1], this.board));
         // this.placePiece(new Dog("gold", [2, 0], this.board));
@@ -339,13 +336,13 @@ export class Game {
             return cell instanceof Rabbit && cell.color === "silver";
         });
 
-        if (goldenRabbits) console.log("Gold wins! Golden rabbits reached the end.");
+        if (goldenRabbits) alert("Gold wins! Golden rabbits reached the end.");
 
         const silverRabbits = this.board[this.board.length - 1].some((cell) => {
             return cell instanceof Rabbit && cell.color === "gold";
         });
 
-        if (silverRabbits) console.log("Silver wins! Silver rabbits reached the end.");
+        if (silverRabbits) alert("Silver wins! Silver rabbits reached the end.");
     }
 
     private checkWinByRabbitsTrapped(): void {
@@ -355,39 +352,26 @@ export class Game {
             return cell instanceof Rabbit && cell.color === "gold";
         });
 
-        if (!goldenRabbits) console.log("Silver wins! Gold rabbits are trapped.");
+        if (!goldenRabbits) alert("Silver wins! Gold rabbits are trapped.");
 
         const silverRabbits = pieces.some((cell) => {
             return cell instanceof Rabbit && cell.color === "silver";
         });
 
-        if (!silverRabbits) console.log("Gold wins! Silver rabbits are trapped.");
+        if (!silverRabbits) alert("Gold wins! Silver rabbits are trapped.");
     }
 
     private checkWinByImmobilization(): void {
         const pieces = this.getAllPieces();
+        const silverPieces = pieces.filter((cell) => cell.color === "silver");
+        const goldPieces = pieces.filter((cell) => cell.color === "gold");
 
-        const ableGoldPieces = pieces.some((cell) => {
-            if (cell.color === "silver") return false;
-            const adjacents = cell.getAvailableMovements();
-            const pulls = cell.getPullablePieces();
-            const pushes = cell.getPushablePieces();
+        const ableGoldPieces = silverPieces.some((piece) => !piece.isImmobilized());
 
-            return adjacents.length && pulls.length && pushes.length;
-        });
+        if (!ableGoldPieces) alert("Silver wins! Gold pieces are immobilized.");
 
-        if (!ableGoldPieces) console.log("Silver wins! Gold pieces are immobilized.");
-
-        const ableSilverPieces = pieces.some((cell) => {
-            if (cell.color === "gold") return false;
-            const adjacents = cell.getAvailableMovements();
-            const pulls = cell.getPullablePieces();
-            const pushes = cell.getPushablePieces();
-
-            return adjacents.length && pulls.length && pushes.length;
-        });
-
-        if (!ableSilverPieces) console.log("Gold wins! Silver pieces are immobilized.");
+        const ableSilverPieces = goldPieces.some((cell) => !cell.isImmobilized());
+        if (!ableSilverPieces) alert("Gold wins! Silver pieces are immobilized.");
     }
 
     /**
@@ -409,8 +393,6 @@ export class Game {
                 if (
                     !adjacentCells.some((tile) => {
                         const cPiece = this.getPieceAt(tile);
-                        
-                        // console.log("piece", piece);
                         return cPiece && cPiece.color === piece.color;
                     })
                 ) {

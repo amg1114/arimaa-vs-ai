@@ -145,6 +145,16 @@ export class Piece {
         return weighterPieces > 0;
     }
 
+    isImmobilized(): boolean {
+        if (this.isFreezed()) return true;
+        console.log("isImmobilized", this.getAvailableMovements(), this.getPushablePieces(), this.getPullablePieces());
+        const availableMovements = this.getAvailableMovements();
+        const pushablePieces = this.getPushablePieces();
+        const pullablePieces = this.getPullablePieces();
+
+        return availableMovements.length === 0 && pushablePieces.length === 0 && pullablePieces.length === 0;
+    }
+
     /**
      * Returns the adjacent movements for a given position on a 2D grid.
      *
@@ -248,5 +258,9 @@ export class Piece {
             }
         }
         return pullablePieces;
+    }
+
+    public toString(): string {
+        return `${this.color}[0]${this.name[0]}${this.position[0]}${this.position[1]}`;
     }
 }
