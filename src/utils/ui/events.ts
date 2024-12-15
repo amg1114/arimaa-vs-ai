@@ -39,8 +39,10 @@ export function onCellClick(event: MouseEvent, game: Game, canvas: HTMLCanvasEle
         showErrorMessage("The piece is frozen");
         return;
     }
-
-    game.activeCell = null;
+    if (!game.isMoving) {
+        game.activeCell = null;
+        
+    }
 }
 
 /**
