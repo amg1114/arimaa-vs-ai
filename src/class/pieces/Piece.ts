@@ -35,7 +35,7 @@ export class Piece {
     /**
      * The name of the piece.
      */
-    public name: string;
+    public name: "Rabbit" | "Horse" | "Camel" | "Elephant" | "Dog" | "Cat";
 
     /**
      * Indicates whether the piece is floating.
@@ -147,8 +147,8 @@ export class Piece {
 
     isImmobilized(): boolean {
         if (this.isFreezed()) return true;
-        console.log("isImmobilized", this.getAvailableMovements(), this.getPushablePieces(), this.getPullablePieces());
-        const availableMovements = this.getAvailableMovements();
+        console.log("isImmobilized", this.getSimpleMovements(), this.getPushablePieces(), this.getPullablePieces());
+        const availableMovements = this.getSimpleMovements();
         const pushablePieces = this.getPushablePieces();
         const pullablePieces = this.getPullablePieces();
 
@@ -183,7 +183,7 @@ export class Piece {
      * @param board - The current state of the board.
      * @returns An array of coordinates representing the available movements.
      */
-    getAvailableMovements() {
+    getSimpleMovements() {
         const adjacentTiles = this.getAdjacentsMovements(this.position);
         let availableMovements: AvailableMovement[] = [];
 
@@ -230,6 +230,14 @@ export class Piece {
         return pushablePieces;
     }
 
+    getAllMovements(): AvailableMovement[] {
+        const simpleMovements = this.getSimpleMovements();
+        const pushablePieces = this.getPushablePieces();
+        const pullablePieces = this.getPullablePieces();
+
+        return [...simpleMovements, ...pushablePieces, ...pullablePieces];
+    }
+
     /**
      * Retrieves the pieces that can be pulled by the current piece.
      * A piece can be pulled if it is adjacent to the current piece,
@@ -262,5 +270,9 @@ export class Piece {
 
     public toString(): string {
         return `${this.color}[0]${this.name[0]}${this.position[0]}${this.position[1]}`;
+    }
+
+    clone(): Piece {
+        return new Piece(this.color, this.weight, this.board, this.position, this.name);
     }
 }

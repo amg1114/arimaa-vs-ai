@@ -8,10 +8,10 @@ import { Elephant } from "./pieces/Elephant";
 import { Horse } from "./pieces/Horse";
 import { Piece } from "./pieces/Piece";
 import { Rabbit } from "./pieces/Rabbit";
-import { Player } from "./Player";
+import { Player, PlayerIA } from "./Player";
 
 export class Game {
-    public currentPlayer: Player;
+    public currentPlayer: Player | PlayerIA;
 
     public playerGold: Player;
     public playerSilver: Player;
@@ -36,25 +36,20 @@ export class Game {
         this.cellHeight = canvasHeight / this.board.length;
         this.cellWidth = canvasWidth / this.board[0].length;
 
-        this.playerGold = playerGold;
-        this.currentPlayer = playerGold;
+        this.playerGold = this.currentPlayer = playerGold;
         this.playerSilver = playerSilver;
 
         this.initializeTraps();
     }
 
     public fillBoard(): void {
-        // this.placePiece(new Rabbit("gold", [3, 2], this.board));
-        // this.placePiece(new Elephant("gold", [4, 3], this.board));
-
-        // this.placePiece(new Rabbit("silver", [3, 1], this.board));
-        // this.placePiece(new Rabbit("gold", [3, 3], this.board));
-        // this.placePiece(new Camel("silver", [4, 2], this.board));
-        this.randomFill();
+        this.placePiece(new Camel("gold", [0, 0], this.board));
+        this.playerGold.pieces.push(this.board[0][0] as Piece);
+        this.placePiece(new Camel("silver", [7, 0], this.board));
+        this.playerSilver.pieces.push(this.board[7][0] as Piece);
     }
 
     public randomFill(): void {
-        // fill gold pieces
         [this.playerGold, this.playerSilver].forEach((player) => {
             let rabbitCount = 8;
             let dogCount = 2;
@@ -64,28 +59,32 @@ export class Game {
             let elephantCount = 1;
 
             while (rabbitCount > 0 || dogCount > 0 || catCount > 0 || horseCount > 0 || camelCount > 0 || elephantCount > 0) {
-                // Define x and y coordinates here
                 const y = Math.floor(Math.random() * this.board.length);
                 const x = player.color === "silver" ? Math.floor(Math.random() * 2) : Math.floor(Math.random() * 2) + (this.board[0].length - 2);
+                let piece: Piece | null = null;
 
                 if (this.board[x][y] === 0 && rabbitCount > 0) {
-                    this.placePiece(new Rabbit(player.color, [x, y], this.board));
+                    piece = new Rabbit(player.color, [x, y], this.board);
                     rabbitCount--;
                 } else if (this.board[x][y] === 0 && dogCount > 0) {
-                    this.placePiece(new Dog(player.color, [x, y], this.board));
+                    piece = new Dog(player.color, [x, y], this.board);
                     dogCount--;
                 } else if (this.board[x][y] === 0 && catCount > 0) {
-                    this.placePiece(new Cat(player.color, [x, y], this.board));
+                    piece = new Cat(player.color, [x, y], this.board);
                     catCount--;
                 } else if (this.board[x][y] === 0 && horseCount > 0) {
-                    this.placePiece(new Horse(player.color, [x, y], this.board));
+                    piece = new Horse(player.color, [x, y], this.board);
                     horseCount--;
                 } else if (this.board[x][y] === 0 && camelCount > 0) {
-                    this.placePiece(new Camel(player.color, [x, y], this.board));
+                    piece = new Camel(player.color, [x, y], this.board);
                     camelCount--;
                 } else if (this.board[x][y] === 0 && elephantCount > 0) {
-                    this.placePiece(new Elephant(player.color, [x, y], this.board));
+                    piece = new Elephant(player.color, [x, y], this.board);
                     elephantCount--;
+                }
+                if (piece) {
+                    player.pieces.push(piece);
+                    this.placePiece(piece);
                 }
             }
         });
@@ -165,8 +164,8 @@ export class Game {
         }
 
         if (!this.availableMovements.some((movement) => movement.coordinates[0] === toX && movement.coordinates[1] === toY)) {
-            showErrorMessage("Invalid movement: The piece can't move to that position");
-            throw new Error("Invalid movement: The piece can't move to that position");
+            showErrorMessage(`Invalid movement: The piece [${fromX},${fromY}] can't move to that position [${toX},${toY}]`);
+            throw new Error(`Invalid movement: The piece [${fromX},${fromY}] can't move to that position [${toX},${toY}]`);
         }
 
         this.isMoving = false;
@@ -202,7 +201,7 @@ export class Game {
         this.floatingPiece = enemyPiece;
 
         this.completeMovement(player, movement, true);
-        this.availableMovements = enemyPiece.getAvailableMovements();
+        this.availableMovements = enemyPiece.getSimpleMovements();
     }
 
     /**
@@ -250,7 +249,7 @@ export class Game {
         this.floatingPiece = enemyPiece;
 
         this.completeMovement(player, movement, true);
-        this.availableMovements = piece.getAvailableMovements();
+        this.availableMovements = piece.getSimpleMovements();
         this.activeCell = from;
     }
 
@@ -317,9 +316,9 @@ export class Game {
     }
 
     public checkGameEnd(): void {
-        this.checkWinByRabbitsAtEnd();
-        this.checkWinByRabbitsTrapped();
-        this.checkWinByImmobilization();
+        // this.checkWinByRabbitsAtEnd();
+        // this.checkWinByRabbitsTrapped();
+        // this.checkWinByImmobilization();
     }
 
     private checkWinByRabbitsAtEnd(): void {
@@ -448,5 +447,37 @@ export class Game {
         this.currentPlayer.turns = 4;
         this.currentPlayer = this.currentPlayer === this.playerGold ? this.playerSilver : this.playerGold;
         updateGameTurn(this.currentPlayer.color);
+    }
+
+    public getBoardStr(): string {
+        let str = "";
+        for (let i = 0; i < this.board.length; i++) {
+            for (let j = 0; j < this.board[i].length; j++) {
+                const cell = this.board[i][j];
+                if (cell instanceof Piece) {
+                    str += cell.color === "gold" ? cell.name.toUpperCase()[0] : cell.name.toLowerCase()[0];
+                } else {
+                    str += cell;
+                }
+            }
+            str += "\n";
+        }
+        return str;
+    }
+
+    public clone(): Game {
+        // Create a new deep game instance
+        const newGame = new Game(800, 800, this.playerGold, this.playerSilver);
+        newGame.board = this.board.map((row) => row.slice());
+        newGame.cellWidth = this.cellWidth;
+        newGame.cellHeight = this.cellHeight;
+        newGame.activeCell = this.activeCell;
+        newGame.currentPlayer = this.currentPlayer.clone();
+        newGame.floatingPiece = this.floatingPiece ? this.floatingPiece.clone() : null;
+        newGame.history = this.history.slice();
+        newGame.availableMovements = this.availableMovements.slice();
+        newGame.isMoving = this.isMoving;
+
+        return newGame;
     }
 }

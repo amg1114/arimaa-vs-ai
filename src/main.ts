@@ -2,7 +2,7 @@ import "./style.css";
 
 import { Game } from "./class/Game.ts";
 import { Piece } from "./class/pieces/Piece.ts";
-import { Player } from "./class/Player.ts";
+import { Player, PlayerIA } from "./class/Player.ts";
 
 import { GameMovement } from "./types/game-movement";
 
@@ -18,6 +18,7 @@ declare global {
     interface Window {
         game: Game;
         playerA: Player;
+        playerB: PlayerIA;
     }
 }
 
@@ -30,14 +31,15 @@ canvas.height = canvasHeight;
 
 // document ready
 const gPlayer = new Player("gold");
-const sPlayer = new Player("silver");
+const sPlayer = new PlayerIA("silver");
 var game = new Game(canvasHeight, canvasWidth, gPlayer, sPlayer);
 
 const cellHeight = game.cellHeight;
 const cellWidth = game.cellWidth;
 
 window.game = game;
-window.playerA = new Player("silver");
+window.playerA = gPlayer;
+window.playerB = sPlayer;
 
 game.fillBoard();
 
@@ -84,7 +86,7 @@ simpleMovementButton.addEventListener("click", () => {
     const piece = game.getPieceAt(game.activeCell!);
 
     if (piece) {
-        const movements = piece.getAvailableMovements();
+        const movements = piece.getSimpleMovements();
         game.isMoving = "simple";
 
         game.setAvailableMovements(movements);
