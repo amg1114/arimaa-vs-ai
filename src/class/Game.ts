@@ -45,11 +45,12 @@ export class Game {
 
     public fillBoard(): void {
         // this.placePiece(new Rabbit("gold", [3, 2], this.board));
-        this.placePiece(new Elephant("gold", [4, 3], this.board));
+        // this.placePiece(new Elephant("gold", [4, 3], this.board));
 
-        this.placePiece(new Rabbit("silver", [3, 1], this.board));
-        this.placePiece(new Rabbit("gold", [3, 3], this.board));
-        this.placePiece(new Camel("silver", [4, 2], this.board));
+        // this.placePiece(new Rabbit("silver", [3, 1], this.board));
+        // this.placePiece(new Rabbit("gold", [3, 3], this.board));
+        // this.placePiece(new Camel("silver", [4, 2], this.board));
+        this.randomFill();
     }
 
     public randomFill(): void {
