@@ -5,6 +5,7 @@ export type GameMovement = {
     from: number[];
     to: number[];
     player: Player;
+    turns?: number;
 };
 
 export type AvailableMovement = {

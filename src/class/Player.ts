@@ -14,7 +14,8 @@ export class Player {
         const player = new Player(this.color);
         
         player.turns = this.turns;
-        player.pieces = this.pieces.map((piece) => piece.clone());
+        player.pieces = [];
+        // player.pieces = this.pieces.map((piece) => piece.clone());
 
         return player;
     }

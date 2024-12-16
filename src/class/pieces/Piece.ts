@@ -50,12 +50,15 @@ export class Piece {
      */
     public active: boolean = false;
 
+    public gameId: string;
+
     constructor(
         color: ColorPiece,
         weight: number,
         board: Board,
         position: number[],
-        name: "Rabbit" | "Horse" | "Camel" | "Elephant" | "Dog" | "Cat"
+        name: "Rabbit" | "Horse" | "Camel" | "Elephant" | "Dog" | "Cat",
+        gameId: string
     ) {
         this.color = color;
         this.weight = weight;
@@ -63,6 +66,7 @@ export class Piece {
         this.position = position;
         this.name = name;
         this.icon = `/pieces/${this.color.toLowerCase()}/${this.name.toLowerCase()}.svg`;
+        this.gameId = gameId;
     }
 
     /**
@@ -273,6 +277,6 @@ export class Piece {
     }
 
     clone(): Piece {
-        return new Piece(this.color, this.weight, this.board, this.position, this.name);
+        return new Piece(this.color, this.weight, this.board, this.position, this.name, this.gameId);
     }
 }

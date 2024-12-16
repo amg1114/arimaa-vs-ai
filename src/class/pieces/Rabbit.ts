@@ -4,10 +4,10 @@ import { Board } from "../../types/game-board";
 import { Piece } from "./Piece";
 
 export class Rabbit extends Piece {
-    constructor(color: ColorPiece, position: number[], board: Board) {
+    constructor(color: ColorPiece, position: number[], board: Board, gameId: string,) {
         const weight = RABBIT_WEIGHT;
 
-        super(color, weight, board, position, "Rabbit");
+        super(color, weight, board, position, "Rabbit", gameId);
     }
 
 

@@ -1,5 +1,6 @@
 import { Board, coordinates } from "../types/game-board";
 import { AvailableMovement, GameMovement, PushMovement } from "../types/game-movement";
+import { simulateAllMovements } from "../utils/minmax";
 import { showErrorMessage, updateGameTurn } from "../utils/ui/menu";
 import { Camel } from "./pieces/Camel";
 import { Cat } from "./pieces/Cat";
@@ -27,7 +28,7 @@ export class Game {
     public availableMovements: AvailableMovement[] = [];
 
     public isMoving: "push" | "pull" | "simple" | false = false;
-
+    public id;
     constructor(canvasHeight: number, canvasWidth: number, playerGold: Player, playerSilver: Player) {
         this.board = Array(8)
             .fill(null)
@@ -38,14 +39,16 @@ export class Game {
 
         this.playerGold = this.currentPlayer = playerGold;
         this.playerSilver = playerSilver;
-
+        this.id = Math.random().toString(36).substr(2, 9);
         this.initializeTraps();
     }
 
     public fillBoard(): void {
-        this.placePiece(new Camel("gold", [0, 0], this.board));
+        this.placePiece(new Camel("gold", [0, 1], this.board, this.id));
+        this.playerGold.pieces.push(this.board[0][1] as Piece);
+        this.placePiece(new Dog("silver", [1, 1], this.board, this.id));
         this.playerGold.pieces.push(this.board[0][0] as Piece);
-        this.placePiece(new Camel("silver", [7, 0], this.board));
+        this.placePiece(new Camel("silver", [7, 0], this.board, this.id));
         this.playerSilver.pieces.push(this.board[7][0] as Piece);
     }
 
@@ -64,22 +67,22 @@ export class Game {
                 let piece: Piece | null = null;
 
                 if (this.board[x][y] === 0 && rabbitCount > 0) {
-                    piece = new Rabbit(player.color, [x, y], this.board);
+                    piece = new Rabbit(player.color, [x, y], this.board, this.id);
                     rabbitCount--;
                 } else if (this.board[x][y] === 0 && dogCount > 0) {
-                    piece = new Dog(player.color, [x, y], this.board);
+                    piece = new Dog(player.color, [x, y], this.board, this.id);
                     dogCount--;
                 } else if (this.board[x][y] === 0 && catCount > 0) {
-                    piece = new Cat(player.color, [x, y], this.board);
+                    piece = new Cat(player.color, [x, y], this.board, this.id);
                     catCount--;
                 } else if (this.board[x][y] === 0 && horseCount > 0) {
-                    piece = new Horse(player.color, [x, y], this.board);
+                    piece = new Horse(player.color, [x, y], this.board, this.id);
                     horseCount--;
                 } else if (this.board[x][y] === 0 && camelCount > 0) {
-                    piece = new Camel(player.color, [x, y], this.board);
+                    piece = new Camel(player.color, [x, y], this.board, this.id);
                     camelCount--;
                 } else if (this.board[x][y] === 0 && elephantCount > 0) {
-                    piece = new Elephant(player.color, [x, y], this.board);
+                    piece = new Elephant(player.color, [x, y], this.board, this.id);
                     elephantCount--;
                 }
                 if (piece) {
@@ -298,11 +301,11 @@ export class Game {
      * - Decrements the player's remaining turns.
      */
     private completeMovement(player: Player, movement: GameMovement | PushMovement, skipDisableMove = false): void {
-        this.history.push(movement);
+        player.turns--;
+        this.history.push({...movement, turns: player.turns});
         this.availableMovements = [];
         this.activeCell = null;
 
-        player.turns--;
 
         if (!skipDisableMove) {
             this.isMoving = false;
@@ -445,15 +448,15 @@ export class Game {
      */
     private switchPlayer(): void {
         this.currentPlayer.turns = 4;
-        this.currentPlayer = this.currentPlayer === this.playerGold ? this.playerSilver : this.playerGold;
+        this.currentPlayer = this.currentPlayer.color === "gold" ? this.playerSilver : this.playerGold;
         updateGameTurn(this.currentPlayer.color);
     }
 
-    public getBoardStr(): string {
+    public getBoardStr(board = this.board): string {
         let str = "";
-        for (let i = 0; i < this.board.length; i++) {
-            for (let j = 0; j < this.board[i].length; j++) {
-                const cell = this.board[i][j];
+        for (let i = 0; i <board.length; i++) {
+            for (let j = 0; j <board[i].length; j++) {
+                const cell =board[i][j];
                 if (cell instanceof Piece) {
                     str += cell.color === "gold" ? cell.name.toUpperCase()[0] : cell.name.toLowerCase()[0];
                 } else {
@@ -468,16 +471,42 @@ export class Game {
     public clone(): Game {
         // Create a new deep game instance
         const newGame = new Game(800, 800, this.playerGold, this.playerSilver);
-        newGame.board = this.board.map((row) => row.slice());
+        newGame.board = this.board.map((row) => row.map((cell) => (cell instanceof Piece ? cell.clone() : cell)));
         newGame.cellWidth = this.cellWidth;
         newGame.cellHeight = this.cellHeight;
         newGame.activeCell = this.activeCell;
         newGame.currentPlayer = this.currentPlayer.clone();
+
+        if (newGame.currentPlayer.color === "gold") {
+            newGame.currentPlayer.pieces = newGame.board.flat().filter((cell) => cell instanceof Piece && cell.color === "gold") as Piece[];
+            newGame.playerSilver.pieces = this.playerSilver.pieces.map((piece) => piece.clone());
+        }else {
+            newGame.currentPlayer.pieces = newGame.board.flat().filter((cell) => cell instanceof Piece && cell.color === "silver") as Piece[];
+            newGame.playerGold.pieces = this.playerGold.pieces.map((piece) => piece.clone());
+        }
+
+        newGame.playerGold = this.playerGold.clone();
+        newGame.playerSilver = this.playerSilver.clone();
+
         newGame.floatingPiece = this.floatingPiece ? this.floatingPiece.clone() : null;
         newGame.history = this.history.slice();
         newGame.availableMovements = this.availableMovements.slice();
         newGame.isMoving = this.isMoving;
 
         return newGame;
+    }
+
+    public iaMovemovements(): void {
+
+        console.log("IA Movements", this.currentPlayer.pieces[0]);
+        const movements = simulateAllMovements(this,  this.currentPlayer.pieces[0], this.currentPlayer.color);
+
+        // console.log("Iniital State");
+        // console.log(this.getBoardStr());
+        console.log(movements.map((movement) => movement.path));
+        // movements.forEach((movement) => {
+        //     console.log(movement.path);
+        //     // console.log(movement.game.getBoardStr());
+        // });
     }
 }

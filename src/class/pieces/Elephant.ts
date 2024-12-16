@@ -4,8 +4,8 @@ import { Board } from "../../types/game-board";
 import { Piece } from "./Piece";
 
 export class Elephant extends Piece {
-    constructor(color: ColorPiece, position: number[], board: Board) {
+    constructor(color: ColorPiece, position: number[], board: Board, gameId: string) {
         const weight = ELEPHANT_WEIGHT;
-        super(color, weight, board, position, "Elephant");
+        super(color, weight, board, position, "Elephant", gameId);
     }
 }
