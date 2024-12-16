@@ -10,6 +10,7 @@ import { pullMovementButton, pushMovementButton, simpleMovementButton, disableMe
 import { onCellClick, onCellHover, parseOffsetToCoordinates } from "./utils/ui/events.ts";
 
 import { BLACK_CELL_COLOR, CELL_TEXT_COLOR, drawCell, drawImage, drawSelectedCell, TRAP_CELL_COLOR, WHITE_CELL_COLOR } from "./utils/ui/graphics.ts";
+import { Cat } from "./class/pieces/Cat.ts";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#canvas")!;
 const ctx = canvas.getContext("2d")!;
@@ -17,8 +18,12 @@ const ctx = canvas.getContext("2d")!;
 declare global {
     interface Window {
         game: Game;
+        piece: Piece;
         playerA: Player;
         playerB: PlayerIA;
+        p0: Piece;
+        p1: Piece;
+        nP: Piece;
     }
 }
 
@@ -41,8 +46,12 @@ window.game = game;
 window.playerA = gPlayer;
 window.playerB = sPlayer;
 
+
 game.fillBoard();
 
+window.p0 = game.getAllPieces()[0]
+window.p1 = game.getAllPieces()[1]
+window.nP = new Cat("gold", [1, 1], game.board, game.id);
 // Canvas Event Listeners
 canvas.addEventListener("click", (event: MouseEvent) => {
     const offset = parseOffsetToCoordinates(event, canvas);

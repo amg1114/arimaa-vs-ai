@@ -44,11 +44,12 @@ export class Game {
     }
 
     public fillBoard(): void {
-        this.placePiece(new Camel("gold", [0, 1], this.board, this.id));
+        // this.randomFill();
+        this.placePiece(new Camel("gold", [0, 1], this.board, this));
         this.playerGold.pieces.push(this.board[0][1] as Piece);
-        this.placePiece(new Dog("silver", [1, 1], this.board, this.id));
+        this.placePiece(new Dog("silver", [1, 1], this.board, this));
         this.playerGold.pieces.push(this.board[0][0] as Piece);
-        this.placePiece(new Camel("silver", [7, 0], this.board, this.id));
+        this.placePiece(new Camel("silver", [7, 0], this.board, this));
         this.playerSilver.pieces.push(this.board[7][0] as Piece);
     }
 
@@ -67,25 +68,26 @@ export class Game {
                 let piece: Piece | null = null;
 
                 if (this.board[x][y] === 0 && rabbitCount > 0) {
-                    piece = new Rabbit(player.color, [x, y], this.board, this.id);
+                    piece = new Rabbit(player.color, [x, y], this.board, this);
                     rabbitCount--;
                 } else if (this.board[x][y] === 0 && dogCount > 0) {
-                    piece = new Dog(player.color, [x, y], this.board, this.id);
+                    piece = new Dog(player.color, [x, y], this.board, this);
                     dogCount--;
                 } else if (this.board[x][y] === 0 && catCount > 0) {
-                    piece = new Cat(player.color, [x, y], this.board, this.id);
+                    piece = new Cat(player.color, [x, y], this.board, this);
                     catCount--;
                 } else if (this.board[x][y] === 0 && horseCount > 0) {
-                    piece = new Horse(player.color, [x, y], this.board, this.id);
+                    piece = new Horse(player.color, [x, y], this.board, this);
                     horseCount--;
                 } else if (this.board[x][y] === 0 && camelCount > 0) {
-                    piece = new Camel(player.color, [x, y], this.board, this.id);
+                    piece = new Camel(player.color, [x, y], this.board, this);
                     camelCount--;
                 } else if (this.board[x][y] === 0 && elephantCount > 0) {
-                    piece = new Elephant(player.color, [x, y], this.board, this.id);
+                    piece = new Elephant(player.color, [x, y], this.board, this);
                     elephantCount--;
                 }
                 if (piece) {
+                    console.log(`Piece ${piece.toString()}`, piece.game.id, this.id);
                     player.pieces.push(piece);
                     this.placePiece(piece);
                 }
@@ -175,7 +177,7 @@ export class Game {
         this.board[fromX][fromY] = 0;
         this.board[toX][toY] = piece;
 
-        piece.position = to;
+        piece.updatePosition([toX, toY]);
         this.completeMovement(player, movement);
     }
 
@@ -198,9 +200,9 @@ export class Game {
 
         const enemyPiece = this.getPieceAt(to)!;
 
-        piece.position = to;
         this.board[fromX][fromY] = 0;
         this.board[toX][toY] = piece;
+        piece.updatePosition([toX, toY]);
         this.floatingPiece = enemyPiece;
 
         this.completeMovement(player, movement, true);
@@ -223,10 +225,10 @@ export class Game {
             throw new Error("Invalid movement: The piece can't move to that position");
         }
 
-        this.board[toX][toY] = piece;
-        piece.position = to;
-
         this.floatingPiece = null;
+        this.board[toX][toY] = piece;
+        piece.updatePosition([toX, toY],);
+
         this.completeMovement(player, movement);
     }
 
@@ -278,9 +280,9 @@ export class Game {
 
         this.board[enemyPiece.position[0]][enemyPiece.position[1]] = 0;
         this.board[fromX][fromY] = enemyPiece;
-        enemyPiece.position = from;
+        enemyPiece.updatePosition([fromX, fromY]);
 
-        piece.position = to;
+        piece.updatePosition([toX, toY]);
         this.board[toX][toY] = piece;
         this.floatingPiece = null;
         this.completeMovement(player, movement);
@@ -425,7 +427,7 @@ export class Game {
         ];
     }
 
-    private getAllPieces(): Piece[] {
+    public getAllPieces(): Piece[] {
         return this.board.flat().filter((cell) => cell instanceof Piece) as Piece[];
     }
 
@@ -471,24 +473,25 @@ export class Game {
     public clone(): Game {
         // Create a new deep game instance
         const newGame = new Game(800, 800, this.playerGold, this.playerSilver);
-        newGame.board = this.board.map((row) => row.map((cell) => (cell instanceof Piece ? cell.clone() : cell)));
+        
+        newGame.board = this.board.map((row) => row.map((cell) => (cell instanceof Piece ? cell.clone(newGame) : cell)));
         newGame.cellWidth = this.cellWidth;
         newGame.cellHeight = this.cellHeight;
         newGame.activeCell = this.activeCell;
         newGame.currentPlayer = this.currentPlayer.clone();
-
+        
         if (newGame.currentPlayer.color === "gold") {
             newGame.currentPlayer.pieces = newGame.board.flat().filter((cell) => cell instanceof Piece && cell.color === "gold") as Piece[];
-            newGame.playerSilver.pieces = this.playerSilver.pieces.map((piece) => piece.clone());
+            newGame.playerSilver.pieces = this.playerSilver.pieces.map((piece) => piece.clone(newGame));
         }else {
             newGame.currentPlayer.pieces = newGame.board.flat().filter((cell) => cell instanceof Piece && cell.color === "silver") as Piece[];
-            newGame.playerGold.pieces = this.playerGold.pieces.map((piece) => piece.clone());
+            newGame.playerGold.pieces = this.playerGold.pieces.map((piece) => piece.clone(newGame));
         }
 
         newGame.playerGold = this.playerGold.clone();
         newGame.playerSilver = this.playerSilver.clone();
 
-        newGame.floatingPiece = this.floatingPiece ? this.floatingPiece.clone() : null;
+        newGame.floatingPiece = this.floatingPiece ? this.floatingPiece.clone(newGame) : null;
         newGame.history = this.history.slice();
         newGame.availableMovements = this.availableMovements.slice();
         newGame.isMoving = this.isMoving;
@@ -498,7 +501,7 @@ export class Game {
 
     public iaMovemovements(): void {
 
-        console.log("IA Movements", this.currentPlayer.pieces[0]);
+        //console.log("IA Movements", this.currentPlayer.pieces[0]);
         const movements = simulateAllMovements(this,  this.currentPlayer.pieces[0], this.currentPlayer.color);
 
         // console.log("Iniital State");
