@@ -14,3 +14,13 @@ export type AvailableMovement = {
 }
 
 export type PushMovement = Omit<GameMovement, "from">;
+
+
+export interface MovementSimulation {
+    type: "max" | "min";
+    children?: MovementSimulation[];
+    value: number | null = null;
+    game: Game;
+    path: string;
+    key: string;
+}

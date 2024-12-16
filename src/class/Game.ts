@@ -1,6 +1,7 @@
 import { Board, coordinates } from "../types/game-board";
 import { AvailableMovement, GameMovement, PushMovement } from "../types/game-movement";
-import { simulateAllMovements } from "../utils/minmax";
+import { buildMinMaxTree } from "../utils/minmax";
+import { gameSimulation } from "../utils/minmax/simulation";
 import { showErrorMessage, updateGameTurn } from "../utils/ui/menu";
 import { Camel } from "./pieces/Camel";
 import { Cat } from "./pieces/Cat";
@@ -44,13 +45,14 @@ export class Game {
     }
 
     public fillBoard(): void {
-        // this.randomFill();
-        this.placePiece(new Camel("gold", [0, 1], this.board, this));
-        this.playerGold.pieces.push(this.board[0][1] as Piece);
-        this.placePiece(new Dog("silver", [1, 1], this.board, this));
-        this.playerGold.pieces.push(this.board[0][0] as Piece);
-        this.placePiece(new Camel("silver", [7, 0], this.board, this));
-        this.playerSilver.pieces.push(this.board[7][0] as Piece);
+        this.randomFill();
+        // this.placePiece(new Camel("gold", [0, 1], this.board, this));
+        // // this.placePiece(new Camel("gold", [0, 7], this.board, this));
+        // this.playerGold.pieces.push(this.board[0][1] as Piece);
+        // this.placePiece(new Dog("silver", [1, 1], this.board, this));
+        // this.playerGold.pieces.push(this.board[0][0] as Piece);
+        // this.placePiece(new Camel("silver", [7, 0], this.board, this));
+        // this.playerSilver.pieces.push(this.board[7][0] as Piece);
     }
 
     public randomFill(): void {
@@ -64,7 +66,7 @@ export class Game {
 
             while (rabbitCount > 0 || dogCount > 0 || catCount > 0 || horseCount > 0 || camelCount > 0 || elephantCount > 0) {
                 const y = Math.floor(Math.random() * this.board.length);
-                const x = player.color === "silver" ? Math.floor(Math.random() * 2) : Math.floor(Math.random() * 2) + (this.board[0].length - 2);
+                const x = player.color === "silver" ? Math.floor(Math.random() * 2) +3  : Math.floor(Math.random() * 2) + (this.board[0].length - 2);
                 let piece: Piece | null = null;
 
                 if (this.board[x][y] === 0 && rabbitCount > 0) {
@@ -87,7 +89,7 @@ export class Game {
                     elephantCount--;
                 }
                 if (piece) {
-                    console.log(`Piece ${piece.toString()}`, piece.game.id, this.id);
+                    // console.log(`Piece ${piece.toString()}`, piece.game.id, this.id);
                     player.pieces.push(piece);
                     this.placePiece(piece);
                 }
@@ -244,10 +246,7 @@ export class Game {
         const { from, to, player } = movement;
         const [toX, toY] = to;
         const piece = this.getPieceAt(from)!;
-        console.log("Pull Movement", {
-            from,
-            to
-        });
+     
         if (!this.availableMovements.some((movement) => movement.coordinates[0] === toX && movement.coordinates[1] === toY)) {
             showErrorMessage("Invalid movement: The piece can't move to that position");
             throw new Error("Invalid movement: The piece can't move to that position");
@@ -430,8 +429,8 @@ export class Game {
         ];
     }
 
-    public getAllPieces(): Piece[] {
-        return this.board.flat().filter((cell) => cell instanceof Piece) as Piece[];
+    public getAllPieces(color: "gold" | "silver" | null = null): Piece[] {
+        return this.board.flat().filter((cell) => cell instanceof Piece && (color ? cell.color === color : true) ) as Piece[];
     }
 
     /**
@@ -503,16 +502,9 @@ export class Game {
     }
 
     public iaMovemovements(): void {
+        const tree = buildMinMaxTree(this, this.currentPlayer.color);
 
-        //console.log("IA Movements", this.currentPlayer.pieces[0]);
-        const movements = simulateAllMovements(this,  this.currentPlayer.pieces[0], this.currentPlayer.color);
-
-        // console.log("Iniital State");
-        // console.log(this.getBoardStr());
-        console.log(movements.map((movement) => movement.path));
-        // movements.forEach((movement) => {
-        //     console.log(movement.path);
-        //     // console.log(movement.game.getBoardStr());
-        // });
+        
+        console.log("Tree", tree.map((node) => node.type));
     }
 }
