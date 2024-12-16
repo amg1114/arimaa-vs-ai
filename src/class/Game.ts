@@ -244,7 +244,10 @@ export class Game {
         const { from, to, player } = movement;
         const [toX, toY] = to;
         const piece = this.getPieceAt(from)!;
-
+        console.log("Pull Movement", {
+            from,
+            to
+        });
         if (!this.availableMovements.some((movement) => movement.coordinates[0] === toX && movement.coordinates[1] === toY)) {
             showErrorMessage("Invalid movement: The piece can't move to that position");
             throw new Error("Invalid movement: The piece can't move to that position");

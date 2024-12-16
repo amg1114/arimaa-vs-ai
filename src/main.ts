@@ -49,9 +49,6 @@ window.playerB = sPlayer;
 
 game.fillBoard();
 
-window.p0 = game.getAllPieces()[0]
-window.p1 = game.getAllPieces()[1]
-window.nP = new Cat("gold", [1, 1], game.board, game.id);
 // Canvas Event Listeners
 canvas.addEventListener("click", (event: MouseEvent) => {
     const offset = parseOffsetToCoordinates(event, canvas);
