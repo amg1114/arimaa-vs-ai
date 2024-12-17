@@ -1,15 +1,14 @@
 import { RABBIT_WEIGHT } from "../../constants/weights.constant";
 import { ColorPiece } from "../../types/color-piece";
-import { Board } from "../../types/game-board";
+import { Game } from "../Game";
 import { Piece } from "./Piece";
 
 export class Rabbit extends Piece {
-    constructor(color: ColorPiece, position: number[], board: Board) {
+    constructor(color: ColorPiece, position: number[], game: Game) {
         const weight = RABBIT_WEIGHT;
 
-        super(color, weight, board, position, "Rabbit");
+        super(color, weight, position, "Rabbit", game);
     }
-
 
     /**
      * Determines if the rabbit can move to the specified position on the board.
@@ -23,9 +22,8 @@ export class Rabbit extends Piece {
         const [toX] = to;
 
         // check if is moving behind
-        if (toX > x) return false;
-        
+        if (!this.isFloating && (this.color === "gold" && toX > x) || (this.color === "silver" && toX < x)) return false;
+
         return super.canMove(to);
     }
-
 }

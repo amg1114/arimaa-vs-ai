@@ -6,7 +6,7 @@ import { Player } from "./class/Player.ts";
 
 import { GameMovement } from "./types/game-movement";
 
-import { pullMovementButton, pushMovementButton, simpleMovementButton, disableMenu, showErrorMessage } from "./utils/ui/menu.ts";
+import { pullMovementButton, pushMovementButton, simpleMovementButton, discardButton, disableMenu, showErrorMessage } from "./utils/ui/menu.ts";
 import { onCellClick, onCellHover, parseOffsetToCoordinates } from "./utils/ui/events.ts";
 
 import { BLACK_CELL_COLOR, CELL_TEXT_COLOR, drawCell, drawImage, drawSelectedCell, TRAP_CELL_COLOR, WHITE_CELL_COLOR } from "./utils/ui/graphics.ts";
@@ -17,7 +17,6 @@ const ctx = canvas.getContext("2d")!;
 declare global {
     interface Window {
         game: Game;
-        playerA: Player;
     }
 }
 
@@ -37,7 +36,6 @@ const cellHeight = game.cellHeight;
 const cellWidth = game.cellWidth;
 
 window.game = game;
-window.playerA = new Player("silver");
 
 game.fillBoard();
 
@@ -51,22 +49,41 @@ canvas.addEventListener("click", (event: MouseEvent) => {
             from: game.activeCell!,
             to: cell,
             player: game.currentPlayer,
+            type: "simple",
         };
+
+        if (game.checkGameEnd()) {
+            game.gameOver();
+            disableMenu();
+            return;
+        }
+
+        const playerColor = game.currentPlayer.color;
 
         if (game.isMoving === "simple") {
             game.simpleMovement(movement);
         } else if (game.isMoving === "push") {
             if (!game.floatingPiece) {
+                movement.type = "pre-push";
                 game.pushMovement(movement);
             } else {
+                movement.type = "push";
                 game.pushPiece(movement);
             }
         } else if (game.isMoving === "pull") {
             if (!game.floatingPiece) {
+                movement.type = "pre-pull";
                 game.pullMovement(movement);
             } else {
+                movement.type = "pull";
                 game.pullPiece(movement);
             }
+        }
+
+        
+
+        if (game.currentPlayer.color !== playerColor) {
+            game.playIA();
         }
 
         disableMenu();
@@ -84,10 +101,14 @@ simpleMovementButton.addEventListener("click", () => {
     const piece = game.getPieceAt(game.activeCell!);
 
     if (piece) {
-        const movements = piece.getAvailableMovements();
-        game.isMoving = "simple";
+        const movements = piece.getSimpleMovements();
+        if (movements.length) {
+            game.isMoving = "simple";
+            game.setAvailableMovements(movements);
+            return;
+        }
 
-        game.setAvailableMovements(movements);
+        showErrorMessage("That piece can't move");
     }
 });
 
@@ -100,9 +121,14 @@ pushMovementButton.addEventListener("click", () => {
     const piece = game.getPieceAt(game.activeCell!);
     if (piece) {
         const movements = piece.getPushablePieces();
-        game.isMoving = "push";
-        game.setAvailableMovements(movements);
+        if (movements.length) {
+            game.isMoving = "push";
+            game.setAvailableMovements(movements);
+            return;
+        }
     }
+
+    showErrorMessage("That piece can't move");
 });
 
 pullMovementButton.addEventListener("click", () => {
@@ -114,9 +140,40 @@ pullMovementButton.addEventListener("click", () => {
     const piece = game.getPieceAt(game.activeCell!);
     if (piece) {
         const movements = piece.getPullablePieces();
-        game.isMoving = "pull";
-        game.setAvailableMovements(movements);
+        if (movements.length) {
+            game.isMoving = "pull";
+            game.setAvailableMovements(movements);
+            return;
+        }
     }
+});
+
+discardButton.addEventListener("click", () => {
+    const lasMovement = game.history.pop();
+
+    game.isMoving = false;
+    game.activeCell = null;
+    game.availableMovements = [];
+    if (lasMovement && (lasMovement.type === "pre-pull" || lasMovement.type === "pre-push")) {
+        if (lasMovement.type === "pre-push") {
+            const { from, to } = lasMovement;
+            const [fromX, fromY] = from!;
+            const [toX, toY] = to;
+
+            const piece = game.getPieceAt(to)!;
+            const enemyPiece = game.floatingPiece!;
+
+            game.board[toX][toY] = enemyPiece;
+            enemyPiece.position = to;
+
+            game.board[fromX][fromY] = piece;
+            piece.position = from!;
+        }
+
+        game.floatingPiece = null;
+    }
+
+    disableMenu();
 });
 
 function gameLoop() {
@@ -180,9 +237,9 @@ function drawBoard() {
             ctx.fillStyle = CELL_TEXT_COLOR;
 
             if (j === 0) {
-                ctx.fillText(`${i }`, j * cellWidth + 5, i * cellHeight + 10);
+                ctx.fillText(`${i}`, j * cellWidth + 5, i * cellHeight + 10);
             } else if (i === 0) {
-                ctx.fillText(`${j }`, j * cellWidth + 5, i * cellHeight + 10);
+                ctx.fillText(`${j}`, j * cellWidth + 5, i * cellHeight + 10);
             }
         }
     }

@@ -1,6 +1,8 @@
 import { Board, coordinates } from "../types/game-board";
-import { AvailableMovement, GameMovement, PushMovement } from "../types/game-movement";
-import { showErrorMessage, updateGameTurn } from "../utils/ui/menu";
+import { AvailableMovement, GameMovement } from "../types/game-movement";
+import { buildMinMaxTree, minimax } from "../utils/minmax";
+
+import { showErrorMessage, showSuccessMessage, updateGameTurn, updateTurnsCounter } from "../utils/ui/menu";
 import { Camel } from "./pieces/Camel";
 import { Cat } from "./pieces/Cat";
 import { Dog } from "./pieces/Dog";
@@ -23,10 +25,15 @@ export class Game {
     public activeCell: coordinates | null = null;
     public floatingPiece: Piece | null = null;
 
-    public history: (GameMovement | PushMovement)[] = [];
+    public history: GameMovement[] = [];
     public availableMovements: AvailableMovement[] = [];
 
     public isMoving: "push" | "pull" | "simple" | false = false;
+    public id;
+    public winType: "byRabbits" | "byTrapped" | "byImmobilization" | null = null;
+    public winner: "gold" | "silver" | null = null;
+
+    public minMaxDecision: Game | null = null;
 
     constructor(canvasHeight: number, canvasWidth: number, playerGold: Player, playerSilver: Player) {
         this.board = Array(8)
@@ -36,25 +43,116 @@ export class Game {
         this.cellHeight = canvasHeight / this.board.length;
         this.cellWidth = canvasWidth / this.board[0].length;
 
-        this.playerGold = playerGold;
-        this.currentPlayer = playerGold;
+        this.playerGold = this.currentPlayer = playerGold;
         this.playerSilver = playerSilver;
-
+        this.id = Math.random().toString(36).substr(2, 9);
         this.initializeTraps();
     }
 
     public fillBoard(): void {
-        // this.placePiece(new Rabbit("gold", [3, 2], this.board));
-        // this.placePiece(new Elephant("gold", [4, 3], this.board));
+        this.staticFill();
+    }
 
-        // this.placePiece(new Rabbit("silver", [3, 1], this.board));
-        // this.placePiece(new Rabbit("gold", [3, 3], this.board));
-        // this.placePiece(new Camel("silver", [4, 2], this.board));
-        this.randomFill();
+    public staticFill(): void {
+        const goldPositions = [
+            {
+                type: Rabbit,
+                count: 8,
+                positions: [
+                    [0, 0],
+                    [0, 1],
+                    [0, 2],
+                    [0, 3],
+                    [0, 4],
+                    [0, 5],
+                    [0, 6],
+                    [0, 7],
+                ],
+            },
+            {
+                type: Dog,
+                count: 2,
+                positions: [
+                    [1, 0],
+                    [1, 1],
+                ],
+            },
+            {
+                type: Cat,
+                count: 2,
+                positions: [
+                    [1, 2],
+                    [1, 3],
+                ],
+            },
+            {
+                type: Horse,
+                count: 2,
+                positions: [
+                    [1, 4],
+                    [1, 5],
+                ],
+            },
+            { type: Camel, count: 1, positions: [[1, 6]] },
+            { type: Elephant, count: 1, positions: [[1, 7]] },
+        ];
+
+        const silverPositions = [
+            {
+                type: Rabbit,
+                count: 8,
+                positions: [
+                    [7, 0],
+                    [7, 1],
+                    [7, 2],
+                    [7, 3],
+                    [7, 4],
+                    [7, 5],
+                    [7, 6],
+                    [7, 7],
+                ],
+            },
+            {
+                type: Dog,
+                count: 2,
+                positions: [
+                    [6, 0],
+                    [6, 1],
+                ],
+            },
+            {
+                type: Cat,
+                count: 2,
+                positions: [
+                    [6, 2],
+                    [6, 3],
+                ],
+            },
+            {
+                type: Horse,
+                count: 2,
+                positions: [
+                    [6, 4],
+                    [6, 5],
+                ],
+            },
+            { type: Camel, count: 1, positions: [[6, 6]] },
+            { type: Elephant, count: 1, positions: [[6, 7]] },
+        ];
+
+        [this.playerSilver, this.playerGold].forEach((player, index) => {
+            const positions = index === 0 ? goldPositions : silverPositions;
+            positions.forEach(({ type, positions }) => {
+                positions.forEach(([x, y]) => {
+                    const piece = new type(player.color, [x, y], this);
+
+                    this.placePiece(piece);
+                });
+            });
+        });
     }
 
     public randomFill(): void {
-        // fill gold pieces
         [this.playerGold, this.playerSilver].forEach((player) => {
             let rabbitCount = 8;
             let dogCount = 2;
@@ -64,28 +162,31 @@ export class Game {
             let elephantCount = 1;
 
             while (rabbitCount > 0 || dogCount > 0 || catCount > 0 || horseCount > 0 || camelCount > 0 || elephantCount > 0) {
-                // Define x and y coordinates here
                 const y = Math.floor(Math.random() * this.board.length);
                 const x = player.color === "silver" ? Math.floor(Math.random() * 2) : Math.floor(Math.random() * 2) + (this.board[0].length - 2);
+                let piece: Piece | null = null;
 
                 if (this.board[x][y] === 0 && rabbitCount > 0) {
-                    this.placePiece(new Rabbit(player.color, [x, y], this.board));
+                    piece = new Rabbit(player.color, [x, y], this);
                     rabbitCount--;
                 } else if (this.board[x][y] === 0 && dogCount > 0) {
-                    this.placePiece(new Dog(player.color, [x, y], this.board));
+                    piece = new Dog(player.color, [x, y], this);
                     dogCount--;
                 } else if (this.board[x][y] === 0 && catCount > 0) {
-                    this.placePiece(new Cat(player.color, [x, y], this.board));
+                    piece = new Cat(player.color, [x, y], this);
                     catCount--;
                 } else if (this.board[x][y] === 0 && horseCount > 0) {
-                    this.placePiece(new Horse(player.color, [x, y], this.board));
+                    piece = new Horse(player.color, [x, y], this);
                     horseCount--;
                 } else if (this.board[x][y] === 0 && camelCount > 0) {
-                    this.placePiece(new Camel(player.color, [x, y], this.board));
+                    piece = new Camel(player.color, [x, y], this);
                     camelCount--;
                 } else if (this.board[x][y] === 0 && elephantCount > 0) {
-                    this.placePiece(new Elephant(player.color, [x, y], this.board));
+                    piece = new Elephant(player.color, [x, y], this);
                     elephantCount--;
+                }
+                if (piece) {
+                    this.placePiece(piece);
                 }
             }
         });
@@ -165,15 +266,15 @@ export class Game {
         }
 
         if (!this.availableMovements.some((movement) => movement.coordinates[0] === toX && movement.coordinates[1] === toY)) {
-            showErrorMessage("Invalid movement: The piece can't move to that position");
-            throw new Error("Invalid movement: The piece can't move to that position");
+            showErrorMessage(`Invalid movement: The piece [${fromX},${fromY}] can't move to that position [${toX},${toY}]`);
+            throw new Error(`Invalid movement: The piece [${fromX},${fromY}] can't move to that position [${toX},${toY}]`);
         }
 
         this.isMoving = false;
         this.board[fromX][fromY] = 0;
         this.board[toX][toY] = piece;
 
-        piece.position = to;
+        piece.updatePosition([toX, toY]);
         this.completeMovement(player, movement);
     }
 
@@ -196,13 +297,15 @@ export class Game {
 
         const enemyPiece = this.getPieceAt(to)!;
 
-        piece.position = to;
         this.board[fromX][fromY] = 0;
         this.board[toX][toY] = piece;
+        piece.updatePosition([toX, toY]);
+
+        enemyPiece.isFloating = true;
         this.floatingPiece = enemyPiece;
 
         this.completeMovement(player, movement, true);
-        this.availableMovements = enemyPiece.getAvailableMovements();
+        this.availableMovements = enemyPiece.getSimpleMovements();
     }
 
     /**
@@ -211,20 +314,22 @@ export class Game {
      * @param {PushMovement} movement - The movement details including the target position and the player making the move.
      * @throws {Error} Throws an error if the movement is invalid.
      */
-    public pushPiece(movement: PushMovement): void {
+    public pushPiece(movement: GameMovement): void {
         const { to, player } = movement;
         const [toX, toY] = to;
         const piece = this.floatingPiece!;
+        piece.isFloating = false;
 
         if (!this.availableMovements.some((movement) => movement.coordinates[0] === toX && movement.coordinates[1] === toY)) {
-            showErrorMessage("Invalid movement: The piece can't move to that position");
-            throw new Error("Invalid movement: The piece can't move to that position");
+            showErrorMessage(`Invalid movement: The piece can't move to that position ${toX},${toY}`);
+
+            throw new Error(`Invalid movement: The piece can't move to that position ${toX},${toY}`);
         }
 
-        this.board[toX][toY] = piece;
-        piece.position = to;
-
         this.floatingPiece = null;
+        this.board[toX][toY] = piece;
+        piece.updatePosition([toX, toY]);
+
         this.completeMovement(player, movement);
     }
 
@@ -239,7 +344,7 @@ export class Game {
     public pullMovement(movement: GameMovement): void {
         const { from, to, player } = movement;
         const [toX, toY] = to;
-        const piece = this.getPieceAt(from)!;
+        const piece = this.getPieceAt(from!)!;
 
         if (!this.availableMovements.some((movement) => movement.coordinates[0] === toX && movement.coordinates[1] === toY)) {
             showErrorMessage("Invalid movement: The piece can't move to that position");
@@ -247,11 +352,12 @@ export class Game {
         }
 
         const enemyPiece = this.getPieceAt(to)!;
+        enemyPiece.isFloating = true;
         this.floatingPiece = enemyPiece;
 
         this.completeMovement(player, movement, true);
-        this.availableMovements = piece.getAvailableMovements();
-        this.activeCell = from;
+        this.availableMovements = piece.getSimpleMovements();
+        this.activeCell = from!;
     }
 
     /**
@@ -266,9 +372,9 @@ export class Game {
         const { from, to, player } = movement;
         const [fromX, fromY] = from!;
         const [toX, toY] = to;
-        const piece = this.getPieceAt(from)!;
+        const piece = this.getPieceAt(from!)!;
         const enemyPiece = this.floatingPiece!;
-
+        enemyPiece.isFloating = false;
         if (!this.availableMovements.some((movement) => movement.coordinates[0] === toX && movement.coordinates[1] === toY)) {
             showErrorMessage("Invalid movement: The piece can't move to that position");
             throw new Error("Invalid movement: The piece can't move to that position");
@@ -276,9 +382,9 @@ export class Game {
 
         this.board[enemyPiece.position[0]][enemyPiece.position[1]] = 0;
         this.board[fromX][fromY] = enemyPiece;
-        enemyPiece.position = from;
+        enemyPiece.updatePosition([fromX, fromY]);
 
-        piece.position = to;
+        piece.updatePosition([toX, toY]);
         this.board[toX][toY] = piece;
         this.floatingPiece = null;
         this.completeMovement(player, movement);
@@ -298,12 +404,11 @@ export class Game {
      * - If `skipDisableMove` is not true, sets the `isMoving` flag to false.
      * - Decrements the player's remaining turns.
      */
-    private completeMovement(player: Player, movement: GameMovement | PushMovement, skipDisableMove = false): void {
-        this.history.push(movement);
+    private completeMovement(player: Player, movement: GameMovement, skipDisableMove = false): void {
+        player.turns--;
+        this.history.push({ ...movement, turns: player.turns });
         this.availableMovements = [];
         this.activeCell = null;
-
-        player.turns--;
 
         if (!skipDisableMove) {
             this.isMoving = false;
@@ -314,59 +419,85 @@ export class Game {
         if (player.turns === 0) {
             this.switchPlayer();
         }
+
+        updateTurnsCounter(player.turns);
     }
 
-    public checkGameEnd(): void {
-        this.checkWinByRabbitsAtEnd();
-        this.checkWinByRabbitsTrapped();
-        this.checkWinByImmobilization();
+    public checkGameEnd(): "gold" | "silver" | null {
+        const winByRabbits = this.checkWinByRabbitsAtEnd();
+        if (winByRabbits) {
+            this.winType = "byRabbits";
+            this.winner = winByRabbits;
+            return winByRabbits;
+        }
+
+        const winByTrapped = this.checkWinByRabbitsTrapped();
+        if (winByTrapped) {
+            this.winType = "byTrapped";
+            this.winner = winByTrapped;
+            return winByTrapped;
+        }
+
+        const winByImmobilization = this.checkWinByImmobilization();
+        if (winByImmobilization) {
+            this.winType = "byImmobilization";
+            this.winner = winByImmobilization;
+            return winByImmobilization;
+        }
+
+        return null;
     }
 
-    private checkWinByRabbitsAtEnd(): void {
+    private checkWinByRabbitsAtEnd(): "gold" | "silver" | null {
         if (this.currentPlayer.color === "gold" && this.currentPlayer.turns === 0) {
             const goldenRabbits = this.board[0].some((cell) => {
-                return cell instanceof Rabbit && cell.color === "gold";
+                return cell.name === "Rabbit" && cell.color === "gold";
             });
 
-            if (goldenRabbits) alert("Gold wins! Golden rabbits reached the end.");
+            if (goldenRabbits) return "gold";
         }
 
         if (this.currentPlayer.color === "silver" && this.currentPlayer.turns === 0) {
             const silverRabbits = this.board[this.board.length - 1].some((cell) => {
-                return cell instanceof Rabbit && cell.color === "silver";
+                return cell.name === "Rabbit" && cell.color === "silver";
             });
 
-            if (silverRabbits) alert("Silver wins! Silver rabbits reached the end.");
+            if (silverRabbits) return "silver";
         }
+
+        return null;
     }
 
-    private checkWinByRabbitsTrapped(): void {
+    public checkWinByRabbitsTrapped(): "gold" | "silver" | null {
         const pieces = this.getAllPieces();
 
         const goldenRabbits = pieces.some((cell) => {
-            return cell instanceof Rabbit && cell.color === "gold";
+            return cell.name === "Rabbit" && cell.color === "gold";
         });
 
-        if (!goldenRabbits) alert("Silver wins! Gold rabbits are trapped.");
+        if (!goldenRabbits) return "silver";
 
         const silverRabbits = pieces.some((cell) => {
-            return cell instanceof Rabbit && cell.color === "silver";
+            return cell.name === "Rabbit" && cell.color === "silver";
         });
 
-        if (!silverRabbits) alert("Gold wins! Silver rabbits are trapped.");
+        if (!silverRabbits) return "gold";
+
+        return null;
     }
 
-    private checkWinByImmobilization(): void {
+    private checkWinByImmobilization(): "gold" | "silver" | null {
         const pieces = this.getAllPieces();
         const silverPieces = pieces.filter((cell) => cell.color === "silver");
         const goldPieces = pieces.filter((cell) => cell.color === "gold");
 
-        const ableGoldPieces = silverPieces.some((piece) => !piece.isImmobilized());
+        const ableGoldPieces = goldPieces.some((piece) => !piece.isImmobilized());
+        if (!ableGoldPieces) return "silver";
 
-        if (!ableGoldPieces) alert("Silver wins! Gold pieces are immobilized.");
+        const ableSilverPieces = silverPieces.some((cell) => !cell.isImmobilized());
+        if (!ableSilverPieces) return "gold";
 
-        const ableSilverPieces = goldPieces.some((cell) => !cell.isImmobilized());
-        if (!ableSilverPieces) alert("Gold wins! Silver pieces are immobilized.");
+        return null;
     }
 
     /**
@@ -391,7 +522,8 @@ export class Game {
                         return cPiece && cPiece.color === piece.color;
                     })
                 ) {
-                    this.board[x][y] = 1;
+                    this.board[x][y] = 0;
+                    
                 }
             }
         });
@@ -414,7 +546,7 @@ export class Game {
      *
      * @returns {coordinates[]} An array of coordinates where each coordinate is represented as a tuple [x, y].
      */
-    private getTraps(): coordinates[] {
+    public getTraps(): coordinates[] {
         return [
             [2, 2],
             [2, 5],
@@ -423,8 +555,8 @@ export class Game {
         ];
     }
 
-    private getAllPieces(): Piece[] {
-        return this.board.flat().filter((cell) => cell instanceof Piece) as Piece[];
+    public getAllPieces(color: "gold" | "silver" | null = null): Piece[] {
+        return this.board.flat().filter((cell) => cell instanceof Piece && (color ? cell.color === color : true)) as Piece[];
     }
 
     /**
@@ -446,7 +578,101 @@ export class Game {
      */
     private switchPlayer(): void {
         this.currentPlayer.turns = 4;
-        this.currentPlayer = this.currentPlayer === this.playerGold ? this.playerSilver : this.playerGold;
+        
+        this.currentPlayer = this.currentPlayer.color === "gold" ? this.playerSilver : this.playerGold;
         updateGameTurn(this.currentPlayer.color);
+    }
+
+    public getBoardStr(board = this.board): string {
+        let str = "";
+        for (let i = 0; i < board.length; i++) {
+            for (let j = 0; j < board[i].length; j++) {
+                const cell = board[i][j];
+                if (cell instanceof Piece) {
+                    str += cell.color === "gold" ? cell.name.toUpperCase()[0] : cell.name.toLowerCase()[0];
+                } else {
+                    str += cell;
+                }
+            }
+            str += "\n";
+        }
+        return str;
+    }
+
+    public clone(): Game {
+        // Create a new deep game instance
+        const newGame = new Game(800, 800, this.playerGold, this.playerSilver);
+
+        newGame.board = this.board.map((row) => row.map((cell) => (cell instanceof Piece ? cell.clone(newGame) : cell)));
+        newGame.cellWidth = this.cellWidth;
+        newGame.cellHeight = this.cellHeight;
+        newGame.activeCell = this.activeCell?.slice() ?? null;
+
+        newGame.playerGold = this.playerGold.clone();
+        newGame.playerSilver = this.playerSilver.clone();
+
+        if (this.currentPlayer.color === "gold") {
+            newGame.currentPlayer = newGame.playerGold;
+        } else {
+            newGame.currentPlayer = newGame.playerSilver;
+        }
+
+        newGame.floatingPiece = this.floatingPiece ? this.floatingPiece.clone(newGame) : null;
+        newGame.history = this.history.slice();
+        newGame.availableMovements = this.availableMovements.slice();
+        newGame.isMoving = this.isMoving;
+
+        newGame.winType = this.winType;
+        newGame.winner = this.winner;
+
+        return newGame;
+    }
+
+    public async playIA() {
+        const tree = buildMinMaxTree(this);
+        
+
+        const minmaxDecision: Game = minimax(tree, true).game;
+        this.minMaxDecision = minmaxDecision;
+
+        const movements = minmaxDecision.history.slice(-4).filter((movement) => movement.player.color === this.currentPlayer.color);
+
+        for (const simulatedMovement of movements) {
+            try {
+                await new Promise<void>((resolve) => {
+                    setTimeout(() => {
+                        const movement = { ...simulatedMovement, player: this.currentPlayer };
+
+                        if (simulatedMovement.type === "simple") {
+                            this.setAvailableMovements(this.getPieceAt(movement.from!)!.getSimpleMovements());
+                            this.simpleMovement(movement);
+                        } else if (movement.type === "pre-push") {
+                            this.setAvailableMovements(this.getPieceAt(movement.from!)!.getPushablePieces());
+                            this.pushMovement(movement);
+                        } else if (movement.type === "push") {
+                            this.pushPiece(movement);
+                        } else if (movement.type === "pre-pull") {
+                            this.setAvailableMovements(this.getPieceAt(movement.from!)!.getPullablePieces());
+                            this.pullMovement(movement);
+                        } else {
+                            this.pullPiece(movement);
+                        }
+                        resolve();
+                    }, 700);
+                });
+            } catch (error) {
+                console.error("Error playing IA", error);
+            }
+        }
+
+        if (this.checkGameEnd()) {
+            this.gameOver();
+            return;
+        }
+    }
+
+    public gameOver() {
+        showSuccessMessage(`Game End: ${this.winner} wins by ${this.winType}`);
+        console.log(`Game Over: ${this.winner} wins by ${this.winType}`);
     }
 }
