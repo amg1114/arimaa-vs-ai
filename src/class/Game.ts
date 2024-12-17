@@ -1,3 +1,4 @@
+import { CopyClipboard } from "flowbite";
 import { Board, coordinates } from "../types/game-board";
 import { AvailableMovement, GameMovement, PushMovement } from "../types/game-movement";
 import { buildMinMaxTree } from "../utils/minmax";
@@ -420,7 +421,7 @@ export class Game {
      *
      * @returns {coordinates[]} An array of coordinates where each coordinate is represented as a tuple [x, y].
      */
-    private getTraps(): coordinates[] {
+    public getTraps(): coordinates[] {
         return [
             [2, 2],
             [2, 5],
@@ -503,8 +504,8 @@ export class Game {
 
     public iaMovemovements(): void {
         const tree = buildMinMaxTree(this, this.currentPlayer.color);
-
+        navigator.clipboard.writeText(JSON.stringify(tree));
         
-        console.log("Tree", tree.map((node) => node.type));
+        console.table(tree);
     }
 }

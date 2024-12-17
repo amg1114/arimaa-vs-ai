@@ -155,7 +155,7 @@ export class Piece {
 
     isImmobilized(): boolean {
         if (this.isFreezed()) return true;
-        console.log("isImmobilized", this.getSimpleMovements(), this.getPushablePieces(), this.getPullablePieces());
+        
         const availableMovements = this.getSimpleMovements();
         const pushablePieces = this.getPushablePieces();
         const pullablePieces = this.getPullablePieces();
