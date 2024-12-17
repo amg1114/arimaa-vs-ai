@@ -5,17 +5,18 @@ function simulateAllMovements(
     game: Game,
     color: "gold" | "silver",
     nodeType: "max" | "min" = "max",
+    evaluatedNodes: Set<string> = new Set<string>(),
     path: string = "",
     depth: number = 0,
-    maxDepth: number = 10
+    maxDepth: number = 5
 ): MovementSimulation[] {
-    const availableTypes: AvailableMovement["type"][] = ["pull"];
-
-    if (game.currentPlayer.turns === 0 || game.currentPlayer.color !== color || depth >= maxDepth || game.checkGameEnd()) {
+    const availableTypes: AvailableMovement["type"][] = ["simple", "push", "pull"];
+    
+    if (game.currentPlayer.turns === 0 || game.currentPlayer.color !== color || depth >= maxDepth) {
         return [
             {
                 type: nodeType,
-                value: null,
+                value: nodeType === "max" ? Infinity : -Infinity,
                 game: game,
                 path: path,
                 key: game.getBoardStr(),
@@ -24,6 +25,12 @@ function simulateAllMovements(
     }
 
     let paths: MovementSimulation[] = [];
+
+    if (evaluatedNodes.has(game.getBoardStr())) {
+        return [];
+    }
+
+    evaluatedNodes.add(game.getBoardStr());
 
     game.getAllPieces(color).forEach((piece) => {
         availableTypes.forEach((type) => {
@@ -53,11 +60,11 @@ function simulateAllMovements(
                             type: "simple",
                         });
 
-                        paths.push(...simulateAllMovements(localGame, color, nodeType, `${newPath}[${localGame.id}]`, depth + 1, maxDepth));
+                        paths.push(...simulateAllMovements(localGame, color, nodeType, evaluatedNodes, `${newPath}[${localGame.id}]`, depth + 1, maxDepth));
                     });
                 } else if (type === "push") {
                     const availableMovements = pieceCopy.getPushablePieces();
-                    console.log("getPushablePieces", availableMovements);
+                    // console.log("getPushablePieces", availableMovements);
                     gameCopy.setAvailableMovements(availableMovements);
 
                     availableMovements.forEach((movement) => {
@@ -77,11 +84,8 @@ function simulateAllMovements(
                                 player: subLocalGame.currentPlayer,
                                 type: "push",
                             });
-
-                            const newPiece = subLocalGame.getPieceAt(movement.coordinates)!;
-
-                            newPiece.game = subLocalGame;
-                            paths.push(...simulateAllMovements(subLocalGame, color, nodeType, `${newPath}[${subLocalGame.id}]`, depth + 1, maxDepth));
+                            
+                            paths.push(...simulateAllMovements(subLocalGame, color, nodeType, evaluatedNodes, `${newPath}[${subLocalGame.id}]`, depth + 1, maxDepth));
                         });
                     });
                 } else {
@@ -111,10 +115,7 @@ function simulateAllMovements(
                                 type: "pull",
                             });
 
-                            const newPiece = subLocalGame.getPieceAt(availableMovement.coordinates)!;
-
-                            newPiece.game = subLocalGame;
-                            paths.push(...simulateAllMovements(subLocalGame, color, nodeType, `${newPath}[${subLocalGame.id}]`, depth + 1, maxDepth));
+                            paths.push(...simulateAllMovements(subLocalGame, color, nodeType, evaluatedNodes, `${newPath}[${subLocalGame.id}]`, depth + 1, maxDepth));
                         });
                     });
                 }
@@ -126,16 +127,5 @@ function simulateAllMovements(
 }
 
 export function gameSimulation(game: Game, type: "max" | "min"): MovementSimulation[] {
-    const evaluatedNodes = new Set<string>();
-    const nodes = simulateAllMovements(game, game.currentPlayer.color, type);
-
-    const uniques = nodes.filter((node) => {
-        if (evaluatedNodes.has(node.key)) {
-            return false;
-        }
-
-        evaluatedNodes.add(node.key);
-        return true;
-    });
-    return uniques;
+    return simulateAllMovements(game, game.currentPlayer.color, type);;
 }

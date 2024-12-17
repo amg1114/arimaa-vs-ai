@@ -23,7 +23,7 @@ export class Rabbit extends Piece {
         const [toX] = to;
 
         // check if is moving behind
-        if (!this.isFloating && (this.color === "gold" && toX < x) || (this.color === "silver" && toX > x)) return false;
+        if (!this.isFloating && (this.color === "gold" && toX > x) || (this.color === "silver" && toX < x)) return false;
 
         return super.canMove(to);
     }

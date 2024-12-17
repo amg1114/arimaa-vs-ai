@@ -263,6 +263,6 @@ export class Piece {
     }
 
     clone(game: Game): Piece {
-        return new Piece(this.color, this.weight, this.game.board, this.position, this.name, game);
+        return new Piece(this.color, this.weight, this.game.board, this.position, this.name, this.game);
     }
 }

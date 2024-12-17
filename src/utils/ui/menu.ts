@@ -5,6 +5,7 @@ const DISABLED_BUTTON_CLASS = ["pointer-events-none", "!bg-gray-300", "!text-gra
 export const simpleMovementButton = document.getElementById("btnSimpleMovement")!;
 export const pushMovementButton = document.getElementById("btnPushMovement")!;
 export const pullMovementButton = document.getElementById("btnPullMovement")!;
+export const discardButton = document.getElementById("btnDiscard")!;
 
 export function enableMovement(id: "btnSimpleMovement" | "btnPushMovement" | "btnPullMovement") {
     document.getElementById(id)!.classList.remove(...DISABLED_BUTTON_CLASS);
@@ -14,32 +15,32 @@ export function enableMenu() {
     simpleMovementButton.classList.remove(...DISABLED_BUTTON_CLASS);
     pushMovementButton.classList.remove(...DISABLED_BUTTON_CLASS);
     pullMovementButton.classList.remove(...DISABLED_BUTTON_CLASS);
+    discardButton.classList.remove(...DISABLED_BUTTON_CLASS);
 }
 
 export function disableMenu() {
-    document.getElementById("btnSimpleMovement")!.classList.add(...DISABLED_BUTTON_CLASS);
+    simpleMovementButton.classList.add(...DISABLED_BUTTON_CLASS);
     pushMovementButton.classList.add(...DISABLED_BUTTON_CLASS);
     pullMovementButton.classList.add(...DISABLED_BUTTON_CLASS);
+    discardButton.classList.add(...DISABLED_BUTTON_CLASS);
 }
 
 export function updateGameTurn(turn: "gold" | "silver") {
     const turnIndicator = document.getElementById("turn-indicator")!.querySelector("path")!;
     turnIndicator.classList.replace(turn === "gold" ? "text-silver-cell" : "text-gold-cell", turn === "gold" ? "text-gold-cell" : "text-silver-cell");
-
 }
 
 export function showErrorMessage(message: string) {
     const toastContainer = document.getElementById("toast-container");
 
     if (!toastContainer) {
-      console.error("Toast container not found!");
-      return;
+        console.error("Toast container not found!");
+        return;
     }
-  
+
     // Crear el HTML del toast
     const toast = document.createElement("div");
-    toast.className =
-      "flex items-center p-4 mb-4 w-full max-w-xs text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800";
+    toast.className = "flex items-center p-4 mb-4 w-full max-w-xs text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800";
     toast.innerHTML = `
       <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-lg dark:bg-red-800 dark:text-red-200">
         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -54,16 +55,16 @@ export function showErrorMessage(message: string) {
         </svg>
       </button>
     `;
-  
+
     // Agregar evento para eliminar el toast
     const closeButton = toast.querySelector("button");
-    const  toastHandler = new Dismiss(toast);
+    const toastHandler = new Dismiss(toast);
 
     closeButton?.addEventListener("click", () => {
-      toastHandler.hide();
-      toastHandler.destroy();
+        toastHandler.hide();
+        toastHandler.destroy();
     });
-  
+
     // Agregar el toast al contenedor
     toastContainer.appendChild(toast);
     // Remover automáticamente el toast después de 5 segundos
@@ -71,6 +72,4 @@ export function showErrorMessage(message: string) {
         toastHandler.hide();
         toastHandler.destroy();
     }, 5000);
-    
-    
 }

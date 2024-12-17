@@ -48,7 +48,9 @@ export class Game {
     }
 
     public fillBoard(): void {
-        // this.staticFill();
+        this.staticFill();
+        return;
+
         const rabbit1 = new Rabbit("gold", [0, 0], this.board, this);
         const rabbit02 = new Rabbit("gold", [5, 0], this.board, this);
         const rabbit2 = new Rabbit("gold", [6, 0], this.board, this);
@@ -153,11 +155,12 @@ export class Game {
             { type: Elephant, count: 1, positions: [[6, 7]] },
         ];
 
-        [this.playerGold, this.playerSilver].forEach((player, index) => {
+        [this.playerSilver, this.playerGold].forEach((player, index) => {
             const positions = index === 0 ? goldPositions : silverPositions;
             positions.forEach(({ type, positions }) => {
                 positions.forEach(([x, y]) => {
                     const piece = new type(player.color, [x, y], this.board, this);
+
                     this.placePiece(piece);
                 });
             });
@@ -271,7 +274,7 @@ export class Game {
         const [fromX, fromY] = from!;
         const [toX, toY] = to;
         const piece = this.getPieceAt(from!)!;
-        
+
         if (player.color !== piece.color) {
             showErrorMessage("Invalid movement: You can't move the opponent's piece");
             throw new Error("Invalid movement: You can't move the opponent's piece");
@@ -461,7 +464,7 @@ export class Game {
     private checkWinByRabbitsAtEnd(): "gold" | "silver" | null {
         if (this.currentPlayer.color === "gold" && this.currentPlayer.turns === 0) {
             const goldenRabbits = this.board[0].some((cell) => {
-                return cell instanceof Rabbit && cell.color === "gold";
+                return cell.name === "Rabbit" && cell.color === "gold";
             });
 
             if (goldenRabbits) return "gold";
@@ -469,7 +472,7 @@ export class Game {
 
         if (this.currentPlayer.color === "silver" && this.currentPlayer.turns === 0) {
             const silverRabbits = this.board[this.board.length - 1].some((cell) => {
-                return cell instanceof Rabbit && cell.color === "silver";
+                return cell.name === "Rabbit" && cell.color === "silver";
             });
 
             if (silverRabbits) return "silver";
@@ -478,17 +481,17 @@ export class Game {
         return null;
     }
 
-    private checkWinByRabbitsTrapped(): "gold" | "silver" | null {
+    public checkWinByRabbitsTrapped(): "gold" | "silver" | null {
         const pieces = this.getAllPieces();
 
         const goldenRabbits = pieces.some((cell) => {
-            return cell instanceof Rabbit && cell.color === "gold";
+            return cell.name === "Rabbit" && cell.color === "gold";
         });
 
         if (!goldenRabbits) return "silver";
 
         const silverRabbits = pieces.some((cell) => {
-            return cell instanceof Rabbit && cell.color === "silver";
+            return cell.name === "Rabbit" && cell.color === "silver";
         });
 
         if (!silverRabbits) return "gold";
@@ -638,6 +641,8 @@ export class Game {
 
     public async playIA() {
         const tree = buildMinMaxTree(this);
+       
+
         const minmaxDecision: Game = minimax(tree, true).game;
         const movements = minmaxDecision.history.slice(-4).filter((movement) => movement.player.color === this.currentPlayer.color);
 

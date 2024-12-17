@@ -3,6 +3,7 @@ import { MovementSimulation } from "../../types/game-movement";
 import evaluateGame from "./heuristicas";
 import { gameSimulation } from "./simulation";
 
+const evaluatedNodes = new Set<string>();
 
 export function minimax(node: MovementSimulation, isMaximizing: boolean): MovementSimulation {
     if (!node.children || node.children.length === 0) {
@@ -56,16 +57,23 @@ export function buildMinMaxTree(game: Game) {
     return tree;
 }
 
-export function getMinMaxTree(game: Game, isMax = true, depth = 0, maxDepth = 2): MovementSimulation[] {
+export function getMinMaxTree(game: Game, isMax = true, depth = 0, maxDepth = 1): MovementSimulation[] {
+    const boardStr = game.getBoardStr();
+    if (evaluatedNodes.has(boardStr)) {
+        return [];
+    }
+    evaluatedNodes.add(boardStr);
+
     if (depth >= maxDepth || game.checkGameEnd()) {
-        const evaluation = evaluateGame(game, game.currentPlayer);
+        const color = game.currentPlayer.color === "silver" ? "silver" : "gold";
+        const evaluation = evaluateGame(game, color);
 
         const node: MovementSimulation = {
             type: isMax ? "max" : "min",
             value: evaluation,
             game: game,
             path: "",
-            key: game.getBoardStr(),
+            key: boardStr,
             color: game.currentPlayer.color,
         };
 

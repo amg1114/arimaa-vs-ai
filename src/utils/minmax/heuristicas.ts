@@ -1,48 +1,53 @@
 import { Game } from "../../class/Game";
-import { Player } from "../../class/Player";
+import { Piece } from "../../class/pieces/Piece";
 
-export default function evaluateGame(game: Game, player: Player): number {
-    const pieces = game.getAllPieces(player.color);
+const pieceValues: { [key: string]: number } = {
+    Rabbit: 1,
+    Cat: 2,
+    Dog: 3,
+    Horse: 4,
+    Camel: 5,
+    Elephant: 6,
+};
 
-    let rabbitsCount = 0;
-    let inmobilizedPieces = 0;
-    let playablePieces = 0;
-    let piecesWeight = 0;
-    let trappedPieces = 0;
+function evaluatePiece(piece: Piece, game: Game): number {
+    const value = pieceValues[piece.name] || 0;
+    const [x, y] = piece.position;
 
-    if (game.checkGameEnd()) {
-        return player.color === game.checkGameEnd() ? 100000 : -10000;
+    // Positional value for central control
+    let positionValue = x >= 2 && x <= 5 && y >= 2 && y <= 5 ? 0.5 : 0;
+
+    // Bonus for Rabbits close to the goal line (depends on color)
+    if (piece.name === "Rabbit") {
+        const goalRow = piece.color === "gold" ? 0 : 7;
+        const distanceToGoal = Math.abs(goalRow - x);
+        positionValue += (7 - distanceToGoal) * 0.1; // Closer to goal gets more value
     }
 
-    pieces.forEach((piece) => {
-        if (piece.name === "Rabbit") {
-            rabbitsCount++;
-        }
+    // Mobility: Check if the piece is frozen or immobilized
+    const isMobile = !piece.isImmobilized();
+    const mobilityValue = isMobile ? 0.5 : -0.5; // Bonus for mobility, penalty for being frozen
 
-        if (piece.isImmobilized()) {
-            inmobilizedPieces--;
-        } else {
-            playablePieces++;
-        }
-
-        game.getTraps().forEach((trap) => {
-            const distance = manhattanDistance(piece.position, trap);
-            if (distance < 2) {
-                if (game.getPieceAt([trap[0] + 1, trap[1]])?.color === player.color) return;
-                if (game.getPieceAt([trap[0] - 1, trap[1]])?.color === player.color) return;
-                if (game.getPieceAt([trap[0], trap[1] + 1])?.color === player.color) return;
-                if (game.getPieceAt([trap[0], trap[1] - 1])?.color === player.color) return;
-
-                trappedPieces++;
-            }
-        });
-
-        piecesWeight += piece.weight;
-    });
-
-    return rabbitsCount + playablePieces - inmobilizedPieces ** 2 - trappedPieces ** 2 + piecesWeight;
+    return value + positionValue + mobilityValue;
 }
 
-function manhattanDistance(from: number[], to: number[]): number {
-    return Math.abs(from[0] - to[0]) + Math.abs(from[1] - to[1]);
+export default function evaluateGame(game: Game, color: "gold" | "silver"): number {
+    const opponentColor = game.currentPlayer.color === "gold" ? "silver" : "gold";
+
+    const ownPieces = game.getAllPieces(opponentColor);
+    const opponentPieces = game.getAllPieces(game.currentPlayer.color);
+
+    let score = 0;
+
+    // Evaluate all pieces for the current player
+    ownPieces.forEach((piece) => {
+        score += evaluatePiece(piece, game);
+    });
+
+    // Evaluate all pieces for the opponent (subtract their value)
+    opponentPieces.forEach((piece) => {
+        score -= evaluatePiece(piece, game);
+    });
+
+    return score;
 }
