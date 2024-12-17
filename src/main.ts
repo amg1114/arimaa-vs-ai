@@ -144,7 +144,7 @@ discardButton.addEventListener("click", () => {
 
     game.isMoving = false;
     game.activeCell = null;
-
+    game.availableMovements = [];
     if (lasMovement && (lasMovement.type === "pre-pull" || lasMovement.type === "pre-push")) {
         if (lasMovement.type === "pre-push") {
             const { from, to } = lasMovement;

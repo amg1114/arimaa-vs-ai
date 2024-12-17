@@ -2,7 +2,7 @@ import { Board, coordinates } from "../types/game-board";
 import { AvailableMovement, GameMovement } from "../types/game-movement";
 import { buildMinMaxTree, minimax } from "../utils/minmax";
 
-import { showErrorMessage, updateGameTurn } from "../utils/ui/menu";
+import { showErrorMessage, updateGameTurn, updateTurnsCounter } from "../utils/ui/menu";
 import { Camel } from "./pieces/Camel";
 import { Cat } from "./pieces/Cat";
 import { Dog } from "./pieces/Dog";
@@ -33,6 +33,8 @@ export class Game {
     public winType: "byRabbits" | "byTrapped" | "byImmobilization" | null = null;
     public winner: "gold" | "silver" | null = null;
 
+    public minMaxDecision: Game | null = null;
+
     constructor(canvasHeight: number, canvasWidth: number, playerGold: Player, playerSilver: Player) {
         this.board = Array(8)
             .fill(null)
@@ -49,23 +51,6 @@ export class Game {
 
     public fillBoard(): void {
         this.staticFill();
-        return;
-
-        const rabbit1 = new Rabbit("gold", [0, 0], this.board, this);
-        const rabbit02 = new Rabbit("gold", [5, 0], this.board, this);
-        const rabbit2 = new Rabbit("gold", [6, 0], this.board, this);
-        const rabbit23 = new Rabbit("silver", [6, 1], this.board, this);
-        const rabbit3 = new Rabbit("silver", [7, 1], this.board, this);
-        const rabbit4 = new Rabbit("gold", [7, 0], this.board, this);
-        // const rabbit5 = new Rabbit("gold", [7, 2], this.board, this);
-
-        this.board[0][0] = rabbit1;
-        this.board[5][0] = rabbit02;
-        this.board[6][0] = rabbit2;
-        this.board[6][1] = rabbit23;
-        this.board[7][1] = rabbit3;
-        this.board[7][0] = rabbit4;
-        // this.board[7][2] = rabbit5;
     }
 
     public staticFill(): void {
@@ -178,7 +163,7 @@ export class Game {
 
             while (rabbitCount > 0 || dogCount > 0 || catCount > 0 || horseCount > 0 || camelCount > 0 || elephantCount > 0) {
                 const y = Math.floor(Math.random() * this.board.length);
-                const x = player.color === "silver" ? Math.floor(Math.random() * 2) + 3 : Math.floor(Math.random() * 2) + (this.board[0].length - 2);
+                const x = player.color === "silver" ? Math.floor(Math.random() * 2) : Math.floor(Math.random() * 2) + (this.board[0].length - 2);
                 let piece: Piece | null = null;
 
                 if (this.board[x][y] === 0 && rabbitCount > 0) {
@@ -434,6 +419,8 @@ export class Game {
         if (player.turns === 0) {
             this.switchPlayer();
         }
+
+        updateTurnsCounter(player.turns);
     }
 
     public checkGameEnd(): "gold" | "silver" | null {
@@ -535,7 +522,8 @@ export class Game {
                         return cPiece && cPiece.color === piece.color;
                     })
                 ) {
-                    this.board[x][y] = 1;
+                    this.board[x][y] = 0;
+                    
                 }
             }
         });
@@ -590,6 +578,7 @@ export class Game {
      */
     private switchPlayer(): void {
         this.currentPlayer.turns = 4;
+        
         this.currentPlayer = this.currentPlayer.color === "gold" ? this.playerSilver : this.playerGold;
         updateGameTurn(this.currentPlayer.color);
     }
@@ -641,9 +630,11 @@ export class Game {
 
     public async playIA() {
         const tree = buildMinMaxTree(this);
-       
+        
 
         const minmaxDecision: Game = minimax(tree, true).game;
+        this.minMaxDecision = minmaxDecision;
+
         const movements = minmaxDecision.history.slice(-4).filter((movement) => movement.player.color === this.currentPlayer.color);
 
         for (const simulatedMovement of movements) {

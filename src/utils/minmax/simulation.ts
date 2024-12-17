@@ -53,6 +53,12 @@ function simulateAllMovements(
                         const localGame = gameCopy.clone();
                         const localPiece = localGame.getPieceAt(pieceCopy.position)!;
 
+                        if (localPiece.name === "Rabbit") {
+                            if (piece.position[0] > movement.coordinates[0]) {
+                                return;
+                            }
+                        }
+
                         localGame.simpleMovement({
                             from: localPiece.position,
                             to: movement.coordinates,

@@ -30,6 +30,10 @@ export function updateGameTurn(turn: "gold" | "silver") {
     turnIndicator.classList.replace(turn === "gold" ? "text-silver-cell" : "text-gold-cell", turn === "gold" ? "text-gold-cell" : "text-silver-cell");
 }
 
+export function updateTurnsCounter(turns: number) {
+  document.getElementById("turns-counter")!.textContent = turns.toString();
+}
+
 export function showErrorMessage(message: string) {
     const toastContainer = document.getElementById("toast-container");
 

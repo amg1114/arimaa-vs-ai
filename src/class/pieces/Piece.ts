@@ -172,6 +172,10 @@ export class Piece {
     getSimpleMovements(excludedPositions: number[][] | null = null): AvailableMovement[] {
         const adjacentTiles = this.getAdjacentsMovements(this.position);
         let availableMovements: AvailableMovement[] = [];
+        
+        if (this.name === "Rabbit") {
+            excludedPositions = [[this.position[0] - 1, this.position[1]]];
+        }
 
         for (const tile of adjacentTiles) {
             if (this.canMove(tile, excludedPositions)) {
@@ -200,7 +204,7 @@ export class Piece {
         let pushablePieces: AvailableMovement[] = [];
 
         if (this.isFreezed()) return [];
-        
+
         for (const tile of adjacentTiles) {
             const [x, y] = tile;
 

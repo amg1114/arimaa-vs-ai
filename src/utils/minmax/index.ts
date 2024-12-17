@@ -60,13 +60,12 @@ export function buildMinMaxTree(game: Game) {
 export function getMinMaxTree(game: Game, isMax = true, depth = 0, maxDepth = 1): MovementSimulation[] {
     const boardStr = game.getBoardStr();
     if (evaluatedNodes.has(boardStr)) {
-        return [];
+        // return [];
     }
     evaluatedNodes.add(boardStr);
 
     if (depth >= maxDepth || game.checkGameEnd()) {
-        const color = game.currentPlayer.color === "silver" ? "silver" : "gold";
-        const evaluation = evaluateGame(game, color);
+        const evaluation = evaluateGame(game);
 
         const node: MovementSimulation = {
             type: isMax ? "max" : "min",
