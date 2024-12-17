@@ -2,7 +2,7 @@ import { Board, coordinates } from "../types/game-board";
 import { AvailableMovement, GameMovement } from "../types/game-movement";
 import { buildMinMaxTree, minimax } from "../utils/minmax";
 
-import { showErrorMessage, updateGameTurn, updateTurnsCounter } from "../utils/ui/menu";
+import { showErrorMessage, showSuccessMessage, updateGameTurn, updateTurnsCounter } from "../utils/ui/menu";
 import { Camel } from "./pieces/Camel";
 import { Cat } from "./pieces/Cat";
 import { Dog } from "./pieces/Dog";
@@ -144,7 +144,7 @@ export class Game {
             const positions = index === 0 ? goldPositions : silverPositions;
             positions.forEach(({ type, positions }) => {
                 positions.forEach(([x, y]) => {
-                    const piece = new type(player.color, [x, y], this.board, this);
+                    const piece = new type(player.color, [x, y], this);
 
                     this.placePiece(piece);
                 });
@@ -167,22 +167,22 @@ export class Game {
                 let piece: Piece | null = null;
 
                 if (this.board[x][y] === 0 && rabbitCount > 0) {
-                    piece = new Rabbit(player.color, [x, y], this.board, this);
+                    piece = new Rabbit(player.color, [x, y], this);
                     rabbitCount--;
                 } else if (this.board[x][y] === 0 && dogCount > 0) {
-                    piece = new Dog(player.color, [x, y], this.board, this);
+                    piece = new Dog(player.color, [x, y], this);
                     dogCount--;
                 } else if (this.board[x][y] === 0 && catCount > 0) {
-                    piece = new Cat(player.color, [x, y], this.board, this);
+                    piece = new Cat(player.color, [x, y], this);
                     catCount--;
                 } else if (this.board[x][y] === 0 && horseCount > 0) {
-                    piece = new Horse(player.color, [x, y], this.board, this);
+                    piece = new Horse(player.color, [x, y], this);
                     horseCount--;
                 } else if (this.board[x][y] === 0 && camelCount > 0) {
-                    piece = new Camel(player.color, [x, y], this.board, this);
+                    piece = new Camel(player.color, [x, y], this);
                     camelCount--;
                 } else if (this.board[x][y] === 0 && elephantCount > 0) {
-                    piece = new Elephant(player.color, [x, y], this.board, this);
+                    piece = new Elephant(player.color, [x, y], this);
                     elephantCount--;
                 }
                 if (piece) {
@@ -672,6 +672,7 @@ export class Game {
     }
 
     public gameOver() {
+        showSuccessMessage(`Game End: ${this.winner} wins by ${this.winType}`);
         console.log(`Game Over: ${this.winner} wins by ${this.winType}`);
     }
 }

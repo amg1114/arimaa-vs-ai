@@ -52,6 +52,12 @@ canvas.addEventListener("click", (event: MouseEvent) => {
             type: "simple",
         };
 
+        if (game.checkGameEnd()) {
+            game.gameOver();
+            disableMenu();
+            return;
+        }
+
         const playerColor = game.currentPlayer.color;
 
         if (game.isMoving === "simple") {
@@ -73,6 +79,9 @@ canvas.addEventListener("click", (event: MouseEvent) => {
                 game.pullPiece(movement);
             }
         }
+
+        
+
         if (game.currentPlayer.color !== playerColor) {
             game.playIA();
         }
