@@ -43,7 +43,6 @@ game.fillBoard();
 canvas.addEventListener("click", (event: MouseEvent) => {
     const offset = parseOffsetToCoordinates(event, canvas);
     const cell = game.getCellAt(offset[0], offset[1]);
-    const piece = game.getPieceAt(cell);
 
     if (game.isMoving) {
         const movement: GameMovement = {
