@@ -10,7 +10,7 @@ const pieceValues: { [key: string]: number } = {
     Elephant: 6,
 };
 
-function evaluatePiece(piece: Piece, game: Game): number {
+function evaluatePiece(piece: Piece): number {
     const value = pieceValues[piece.name] ** 2 || 0;
     const [x, y] = piece.position;
 
@@ -40,12 +40,12 @@ export default function evaluateGame(game: Game): number {
 
     // Evaluate all pieces for the current player
     ownPieces.forEach((piece) => {
-        score += evaluatePiece(piece, game);
+        score += evaluatePiece(piece);
     });
 
     // Evaluate all pieces for the opponent (subtract their value)
     opponentPieces.forEach((piece) => {
-        score -= evaluatePiece(piece, game);
+        score -= evaluatePiece(piece);
     });
 
     return score;

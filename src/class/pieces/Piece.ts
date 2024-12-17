@@ -1,5 +1,5 @@
 import { ColorPiece } from "../../types/color-piece";
-import { Board, coordinates } from "../../types/game-board";
+import { coordinates } from "../../types/game-board";
 import { AvailableMovement } from "../../types/game-movement";
 import { Game } from "../Game";
 
@@ -54,7 +54,6 @@ export class Piece {
     constructor(
         color: ColorPiece,
         weight: number,
-        board: Board,
         position: number[],
         name: "Rabbit" | "Horse" | "Camel" | "Elephant" | "Dog" | "Cat",
         game: Game
@@ -267,6 +266,6 @@ export class Piece {
     }
 
     clone(game: Game): Piece {
-        return new Piece(this.color, this.weight, this.game.board, this.position, this.name, this.game);
+        return new Piece(this.color, this.weight, this.position, this.name, game);
     }
 }
