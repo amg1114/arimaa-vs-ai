@@ -23,4 +23,6 @@ export interface MovementSimulation {
     game: Game;
     path: string;
     key: string;
+    gcolor?: "gold" | "silver";
+    color?: "gold" | "silver";
 }

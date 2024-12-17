@@ -1,5 +1,5 @@
 import { Game } from "../../class/Game";
-import { AvailableMovement, MovementSimulation } from "../../types/game-movement";
+import { AvailableMovement, GameMovement, MovementSimulation } from "../../types/game-movement";
 
 function simulateAllMovements(
     game: Game,
@@ -7,9 +7,9 @@ function simulateAllMovements(
     nodeType: "max" | "min" = "max",
     path: string = "",
     depth: number = 0,
-    maxDepth: number = 1
+    maxDepth: number = 10,
 ): MovementSimulation[] {
-    const availableTypes: AvailableMovement["type"][] = ["simple", "push", "pull"];
+    const availableTypes: AvailableMovement["type"][] = ["simple"];
 
     if (game.currentPlayer.turns === 0 || game.currentPlayer.color !== color || depth >= maxDepth) {
         return [
@@ -41,6 +41,7 @@ function simulateAllMovements(
                 if (type === "simple") {
                     const availableMovements = pieceCopy.getSimpleMovements();
                     gameCopy.setAvailableMovements(availableMovements);
+
                     availableMovements.forEach((movement) => {
                         const localGame = gameCopy.clone();
                         const localPiece = localGame.getPieceAt(pieceCopy.position)!;
@@ -52,8 +53,10 @@ function simulateAllMovements(
                         });
 
                         const newPiece = localGame.getPieceAt(movement.coordinates)!;
+                        const lastMovement = localGame.history[localGame.history.length - 1];
+                        const isAtBack = (lastMovement as GameMovement)?.from === movement.coordinates;
 
-                        if (!newPiece && localGame.isTrap(movement.coordinates)) {
+                        if ((!newPiece && localGame.isTrap(movement.coordinates)) || isAtBack) {
                             paths.push({
                                 type: nodeType,
                                 value: null,
@@ -154,7 +157,16 @@ function simulateAllMovements(
 }
 
 export function gameSimulation(game: Game, type: "max" | "min"): MovementSimulation[] {
-    let nodes = simulateAllMovements(game, game.currentPlayer.color, type);
+    const evaluatedNodes = new Set<string>();
+    const nodes = simulateAllMovements(game, game.currentPlayer.color, type);
+    
+    const uniques = nodes.filter((node) => {
+        if (evaluatedNodes.has(node.key)) {
+            return false;
+        }
 
-    return nodes;
+        evaluatedNodes.add(node.key);
+        return true;
+    })
+    return uniques;
 }

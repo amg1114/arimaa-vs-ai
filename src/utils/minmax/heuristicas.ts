@@ -8,7 +8,12 @@ export default function evaluateGame(game: Game, player: Player): number {
     let inmobilizedPieces = 0;
     let playablePieces = 0;
     let piecesWeight = 0;
-    let trappedPieces = 0; 
+    let trappedPieces = 0;
+
+    if (game.checkGameEnd()) {
+        return player.color === game.checkGameEnd() ? 100000 : -10000;
+    }
+
     pieces.forEach((piece) => {
         if (piece.name === "Rabbit") {
             rabbitsCount++;
@@ -23,10 +28,10 @@ export default function evaluateGame(game: Game, player: Player): number {
         game.getTraps().forEach((trap) => {
             const distance = manhattanDistance(piece.position, trap);
             if (distance < 2) {
-                if(game.getPieceAt([trap[0] + 1, trap[1]])?.color === player.color)  return;
-                if(game.getPieceAt([trap[0] - 1, trap[1]])?.color === player.color)  return;
-                if(game.getPieceAt([trap[0], trap[1]+1])?.color === player.color)  return;
-                if(game.getPieceAt([trap[0], trap[1]-1])?.color === player.color)  return;
+                if (game.getPieceAt([trap[0] + 1, trap[1]])?.color === player.color) return;
+                if (game.getPieceAt([trap[0] - 1, trap[1]])?.color === player.color) return;
+                if (game.getPieceAt([trap[0], trap[1] + 1])?.color === player.color) return;
+                if (game.getPieceAt([trap[0], trap[1] - 1])?.color === player.color) return;
 
                 trappedPieces++;
             }

@@ -1,7 +1,7 @@
 import { CopyClipboard } from "flowbite";
 import { Board, coordinates } from "../types/game-board";
 import { AvailableMovement, GameMovement, PushMovement } from "../types/game-movement";
-import { buildMinMaxTree } from "../utils/minmax";
+import { buildMinMaxTree, minimax } from "../utils/minmax";
 import { gameSimulation } from "../utils/minmax/simulation";
 import { showErrorMessage, updateGameTurn } from "../utils/ui/menu";
 import { Camel } from "./pieces/Camel";
@@ -31,6 +31,9 @@ export class Game {
 
     public isMoving: "push" | "pull" | "simple" | false = false;
     public id;
+    public winType: "byRabbits" | "byTrapped" | "byImmobilization" | null = null;
+    public winner: "gold" | "silver" | null = null;
+
     constructor(canvasHeight: number, canvasWidth: number, playerGold: Player, playerSilver: Player) {
         this.board = Array(8)
             .fill(null)
@@ -46,14 +49,106 @@ export class Game {
     }
 
     public fillBoard(): void {
-        this.randomFill();
-        // this.placePiece(new Camel("gold", [0, 1], this.board, this));
-        // // this.placePiece(new Camel("gold", [0, 7], this.board, this));
-        // this.playerGold.pieces.push(this.board[0][1] as Piece);
-        // this.placePiece(new Dog("silver", [1, 1], this.board, this));
-        // this.playerGold.pieces.push(this.board[0][0] as Piece);
-        // this.placePiece(new Camel("silver", [7, 0], this.board, this));
-        // this.playerSilver.pieces.push(this.board[7][0] as Piece);
+        this.staticFill();
+    }
+
+    public staticFill(): void {
+        const goldPositions = [
+            {
+                type: Rabbit,
+                count: 8,
+                positions: [
+                    [0, 0],
+                    [0, 1],
+                    [0, 2],
+                    [0, 3],
+                    [0, 4],
+                    [0, 5],
+                    [0, 6],
+                    [0, 7],
+                ],
+            },
+            {
+                type: Dog,
+                count: 2,
+                positions: [
+                    [1, 0],
+                    [1, 1],
+                ],
+            },
+            {
+                type: Cat,
+                count: 2,
+                positions: [
+                    [1, 2],
+                    [1, 3],
+                ],
+            },
+            {
+                type: Horse,
+                count: 2,
+                positions: [
+                    [1, 4],
+                    [1, 5],
+                ],
+            },
+            { type: Camel, count: 1, positions: [[1, 6]] },
+            { type: Elephant, count: 1, positions: [[1, 7]] },
+        ];
+
+        const silverPositions = [
+            {
+                type: Rabbit,
+                count: 8,
+                positions: [
+                    [7, 0],
+                    [7, 1],
+                    [7, 2],
+                    [7, 3],
+                    [7, 4],
+                    [7, 5],
+                    [7, 6],
+                    [7, 7],
+                ],
+            },
+            {
+                type: Dog,
+                count: 2,
+                positions: [
+                    [6, 0],
+                    [6, 1],
+                ],
+            },
+            {
+                type: Cat,
+                count: 2,
+                positions: [
+                    [6, 2],
+                    [6, 3],
+                ],
+            },
+            {
+                type: Horse,
+                count: 2,
+                positions: [
+                    [6, 4],
+                    [6, 5],
+                ],
+            },
+            { type: Camel, count: 1, positions: [[6, 6]] },
+            { type: Elephant, count: 1, positions: [[6, 7]] },
+        ];
+
+        [this.playerGold, this.playerSilver].forEach((player, index) => {
+            const positions = index === 0 ? goldPositions : silverPositions;
+            positions.forEach(({ type, positions }) => {
+                positions.forEach(([x, y]) => {
+                    const piece = new type(player.color, [x, y], this.board, this);
+                    player.pieces.push(piece);
+                    this.placePiece(piece);
+                });
+            });
+        });
     }
 
     public randomFill(): void {
@@ -67,7 +162,7 @@ export class Game {
 
             while (rabbitCount > 0 || dogCount > 0 || catCount > 0 || horseCount > 0 || camelCount > 0 || elephantCount > 0) {
                 const y = Math.floor(Math.random() * this.board.length);
-                const x = player.color === "silver" ? Math.floor(Math.random() * 2) +3  : Math.floor(Math.random() * 2) + (this.board[0].length - 2);
+                const x = player.color === "silver" ? Math.floor(Math.random() * 2) + 3 : Math.floor(Math.random() * 2) + (this.board[0].length - 2);
                 let piece: Piece | null = null;
 
                 if (this.board[x][y] === 0 && rabbitCount > 0) {
@@ -230,7 +325,7 @@ export class Game {
 
         this.floatingPiece = null;
         this.board[toX][toY] = piece;
-        piece.updatePosition([toX, toY],);
+        piece.updatePosition([toX, toY]);
 
         this.completeMovement(player, movement);
     }
@@ -247,7 +342,7 @@ export class Game {
         const { from, to, player } = movement;
         const [toX, toY] = to;
         const piece = this.getPieceAt(from)!;
-     
+
         if (!this.availableMovements.some((movement) => movement.coordinates[0] === toX && movement.coordinates[1] === toY)) {
             showErrorMessage("Invalid movement: The piece can't move to that position");
             throw new Error("Invalid movement: The piece can't move to that position");
@@ -307,10 +402,9 @@ export class Game {
      */
     private completeMovement(player: Player, movement: GameMovement | PushMovement, skipDisableMove = false): void {
         player.turns--;
-        this.history.push({...movement, turns: player.turns});
+        this.history.push({ ...movement, turns: player.turns });
         this.availableMovements = [];
         this.activeCell = null;
-
 
         if (!skipDisableMove) {
             this.isMoving = false;
@@ -323,19 +417,38 @@ export class Game {
         }
     }
 
-    public checkGameEnd(): void {
-        // this.checkWinByRabbitsAtEnd();
-        // this.checkWinByRabbitsTrapped();
-        // this.checkWinByImmobilization();
+    public checkGameEnd(): "gold" | "silver" | null {
+        const winByRabbits = this.checkWinByRabbitsAtEnd();
+        if (winByRabbits){
+            this.winType = "byRabbits";
+            this.winner = winByRabbits;
+            return winByRabbits;
+        }
+        
+        const winByTrapped = this.checkWinByRabbitsTrapped();
+        if (winByTrapped){
+            this.winType = "byTrapped";
+            this.winner = winByTrapped;
+            return winByTrapped;
+        }
+        
+        const winByImmobilization = this.checkWinByImmobilization();
+        if (winByImmobilization){
+            this.winType = "byImmobilization";
+            this.winner = winByImmobilization;
+            return winByImmobilization;
+        }
+
+        return null;
     }
 
-    private checkWinByRabbitsAtEnd(): void {
+    private checkWinByRabbitsAtEnd(): "gold" | "silver" | null {
         if (this.currentPlayer.color === "gold" && this.currentPlayer.turns === 0) {
             const goldenRabbits = this.board[0].some((cell) => {
                 return cell instanceof Rabbit && cell.color === "gold";
             });
 
-            if (goldenRabbits) alert("Gold wins! Golden rabbits reached the end.");
+            if (goldenRabbits) return "gold";
         }
 
         if (this.currentPlayer.color === "silver" && this.currentPlayer.turns === 0) {
@@ -343,37 +456,43 @@ export class Game {
                 return cell instanceof Rabbit && cell.color === "silver";
             });
 
-            if (silverRabbits) alert("Silver wins! Silver rabbits reached the end.");
+            if (silverRabbits) return "silver";
         }
+
+        return null;
     }
 
-    private checkWinByRabbitsTrapped(): void {
+    private checkWinByRabbitsTrapped(): "gold" | "silver" | null {
         const pieces = this.getAllPieces();
 
         const goldenRabbits = pieces.some((cell) => {
             return cell instanceof Rabbit && cell.color === "gold";
         });
 
-        if (!goldenRabbits) alert("Silver wins! Gold rabbits are trapped.");
+        if (!goldenRabbits) return "silver";
 
         const silverRabbits = pieces.some((cell) => {
             return cell instanceof Rabbit && cell.color === "silver";
         });
 
-        if (!silverRabbits) alert("Gold wins! Silver rabbits are trapped.");
+        if (!silverRabbits) return "gold";
+
+        return null;
     }
 
-    private checkWinByImmobilization(): void {
+    private checkWinByImmobilization(): "gold" | "silver" | null {
         const pieces = this.getAllPieces();
         const silverPieces = pieces.filter((cell) => cell.color === "silver");
         const goldPieces = pieces.filter((cell) => cell.color === "gold");
 
         const ableGoldPieces = silverPieces.some((piece) => !piece.isImmobilized());
 
-        if (!ableGoldPieces) alert("Silver wins! Gold pieces are immobilized.");
+        if (!ableGoldPieces) return "silver";
 
         const ableSilverPieces = goldPieces.some((cell) => !cell.isImmobilized());
-        if (!ableSilverPieces) alert("Gold wins! Silver pieces are immobilized.");
+        if (!ableSilverPieces) return "gold";
+
+        return null;
     }
 
     /**
@@ -431,7 +550,7 @@ export class Game {
     }
 
     public getAllPieces(color: "gold" | "silver" | null = null): Piece[] {
-        return this.board.flat().filter((cell) => cell instanceof Piece && (color ? cell.color === color : true) ) as Piece[];
+        return this.board.flat().filter((cell) => cell instanceof Piece && (color ? cell.color === color : true)) as Piece[];
     }
 
     /**
@@ -459,9 +578,9 @@ export class Game {
 
     public getBoardStr(board = this.board): string {
         let str = "";
-        for (let i = 0; i <board.length; i++) {
-            for (let j = 0; j <board[i].length; j++) {
-                const cell =board[i][j];
+        for (let i = 0; i < board.length; i++) {
+            for (let j = 0; j < board[i].length; j++) {
+                const cell = board[i][j];
                 if (cell instanceof Piece) {
                     str += cell.color === "gold" ? cell.name.toUpperCase()[0] : cell.name.toLowerCase()[0];
                 } else {
@@ -476,17 +595,17 @@ export class Game {
     public clone(): Game {
         // Create a new deep game instance
         const newGame = new Game(800, 800, this.playerGold, this.playerSilver);
-        
+
         newGame.board = this.board.map((row) => row.map((cell) => (cell instanceof Piece ? cell.clone(newGame) : cell)));
         newGame.cellWidth = this.cellWidth;
         newGame.cellHeight = this.cellHeight;
         newGame.activeCell = this.activeCell;
         newGame.currentPlayer = this.currentPlayer.clone();
-        
+
         if (newGame.currentPlayer.color === "gold") {
             newGame.currentPlayer.pieces = newGame.board.flat().filter((cell) => cell instanceof Piece && cell.color === "gold") as Piece[];
             newGame.playerSilver.pieces = this.playerSilver.pieces.map((piece) => piece.clone(newGame));
-        }else {
+        } else {
             newGame.currentPlayer.pieces = newGame.board.flat().filter((cell) => cell instanceof Piece && cell.color === "silver") as Piece[];
             newGame.playerGold.pieces = this.playerGold.pieces.map((piece) => piece.clone(newGame));
         }
@@ -503,9 +622,15 @@ export class Game {
     }
 
     public iaMovemovements(): void {
-        const tree = buildMinMaxTree(this, this.currentPlayer.color);
-        navigator.clipboard.writeText(JSON.stringify(tree));
-        
-        console.table(tree);
+        const tree = buildMinMaxTree(this);
+        const minmax = minimax(tree, true);
+
+        console.log("Minmax");
+        console.dir(minmax.game.getBoardStr());
+        console.log({
+            history: minmax.game.history,
+            turns: minmax.game.currentPlayer.turns,
+        })
+        console.dir(tree, { depth: null });
     }
 }

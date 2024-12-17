@@ -191,12 +191,12 @@ export class Piece {
      * @param board - The current state of the board.
      * @returns An array of coordinates representing the available movements.
      */
-    getSimpleMovements() {
+    getSimpleMovements(excludedPositions: number[][] | null = null): AvailableMovement[] {
         const adjacentTiles = this.getAdjacentsMovements(this.position);
         let availableMovements: AvailableMovement[] = [];
 
         for (const tile of adjacentTiles) {
-            if (this.canMove(tile)) {
+            if (this.canMove(tile, excludedPositions)) {
                 availableMovements.push({
                     coordinates: tile,
                     type: "simple",
