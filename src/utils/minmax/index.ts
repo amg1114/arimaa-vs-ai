@@ -60,7 +60,7 @@ export function buildMinMaxTree(game: Game) {
 export function getMinMaxTree(game: Game, isMax = true, depth = 0, maxDepth = 1): MovementSimulation[] {
     const boardStr = game.getBoardStr();
     if (evaluatedNodes.has(boardStr)) {
-        // return [];
+        return [];
     }
     evaluatedNodes.add(boardStr);
 

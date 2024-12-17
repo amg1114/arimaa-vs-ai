@@ -17,30 +17,10 @@ function evaluatePiece(piece: Piece, game: Game): number {
     // Positional value for central control
     let positionValue = x >= 2 && x <= 5 && y >= 2 && y <= 5 ? 0.5 : 0;
 
-    // penalize pieces that are too close to the one trap and that trap doesn't have friendly pieces around
-    const traps = game.getTraps();
-    traps.forEach((trap) => {
-        const pieceAt = game.getPieceAt(trap);
-        if (!pieceAt || pieceAt.color !== piece.color) {
-            const distance = Math.abs(trap[0] - x) + Math.abs(trap[1] - y);
-            if (distance === 1) {
-                const adjacents = piece.getAdjacentsMovements(trap);
-
-                if (
-                    !adjacents.some((adjacent) => {
-                        const pieceAt = game.getPieceAt(adjacent);
-                        return pieceAt && pieceAt.color === piece.color;
-                    })
-                ) {
-                    positionValue -= 0.5;
-                }
-            }
-        }
-    });
-
-    // Bonus for Rabbits close to the goal line (depends on color)
     if (piece.name === "Rabbit") {
-        positionValue += 0.0001; // Closer to goal gets more value
+        const goalRow = piece.color === "gold" ? 0 : 7;
+        const distanceToGoal = Math.abs(goalRow - x);
+        positionValue += (7 - distanceToGoal) * 0.1; // Closer to goal gets more value
     }
 
     // Mobility: Check if the piece is frozen or immobilized
