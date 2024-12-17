@@ -4,7 +4,6 @@ import { AvailableMovement } from "../../types/game-movement";
 import { Game } from "../Game";
 
 export class Piece {
-
     /**
      * The color of the piece.
      *
@@ -68,7 +67,6 @@ export class Piece {
         this.game = game;
     }
 
-
     updatePosition(position: coordinates): void {
         this.position = position;
     }
@@ -84,6 +82,8 @@ export class Piece {
         const [x, y] = this.position;
         const [toX, toY] = to;
 
+        if (this.isFreezed() && !this.isFloating) return false;
+
         // check if is moving to an excluded position
         if (excludedPosition) {
             if (excludedPosition.some((tile) => tile[0] === toX && tile[1] === toY)) return false;
@@ -97,32 +97,10 @@ export class Piece {
         if (!adjacentTiles.some((tile) => tile[0] === x && tile[1] === y)) return false;
 
         // check if is moving to an empty tile
-        if (this.game.board[toX][toY] instanceof Piece ) return false;
+        if (this.game.board[toX][toY] instanceof Piece) return false;
 
         return true;
     }
-
-    /**
-     * Determines if the current piece can push another piece on the this.game.board.
-     *
-     * @param piece - The piece to be pushed.
-     * @param board - The game board, represented as a 2D array of numbers or pieces.
-     * @returns `true` if the current piece can push the specified piece, otherwise `false`.
-     */
-    canPush(piece: Piece): boolean {
-        const adjacentTiles = this.getAdjacentsMovements(piece.position);
-
-        if (!adjacentTiles.some((tile) => this.game.board[tile[0]][tile[1]] === 0)) return false;
-
-        if (this.color === piece.color) return false;
-
-        if (this.weight <= piece.weight) return false;
-
-        return true;
-    }
-
-    // To Do:
-    canPull(): void {}
 
     /**
      * Determines if the piece is frozen on the this.game.board.
@@ -155,7 +133,7 @@ export class Piece {
 
     isImmobilized(): boolean {
         if (this.isFreezed()) return true;
-        
+
         const availableMovements = this.getSimpleMovements();
         const pushablePieces = this.getPushablePieces();
         const pullablePieces = this.getPullablePieces();
@@ -221,6 +199,8 @@ export class Piece {
         const adjacentTiles = this.getAdjacentsMovements(this.position);
         let pushablePieces: AvailableMovement[] = [];
 
+        if (this.isFreezed()) return [];
+        
         for (const tile of adjacentTiles) {
             const [x, y] = tile;
 
@@ -258,6 +238,8 @@ export class Piece {
         const adjacentTiles = this.getAdjacentsMovements(this.position);
         let pullablePieces: AvailableMovement[] = [];
 
+        if (this.isFreezed()) return [];
+
         if (adjacentTiles.some((tile) => this.game.board[tile[0]][tile[1]] === 0)) {
             for (const tile of adjacentTiles) {
                 const [x, y] = tile;
@@ -281,6 +263,6 @@ export class Piece {
     }
 
     clone(game: Game): Piece {
-        return new Piece(this.color, this.weight, this.game.board, this.position, this.name, this.game);
+        return new Piece(this.color, this.weight, this.game.board, this.position, this.name, game);
     }
 }

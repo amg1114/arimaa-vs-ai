@@ -1,5 +1,5 @@
 import { Game } from "../../class/Game";
-import { AvailableMovement, GameMovement, MovementSimulation } from "../../types/game-movement";
+import { AvailableMovement, MovementSimulation } from "../../types/game-movement";
 
 function simulateAllMovements(
     game: Game,
@@ -7,11 +7,11 @@ function simulateAllMovements(
     nodeType: "max" | "min" = "max",
     path: string = "",
     depth: number = 0,
-    maxDepth: number = 10,
+    maxDepth: number = 10
 ): MovementSimulation[] {
-    const availableTypes: AvailableMovement["type"][] = ["simple"];
+    const availableTypes: AvailableMovement["type"][] = ["pull"];
 
-    if (game.currentPlayer.turns === 0 || game.currentPlayer.color !== color || depth >= maxDepth) {
+    if (game.currentPlayer.turns === 0 || game.currentPlayer.color !== color || depth >= maxDepth || game.checkGameEnd()) {
         return [
             {
                 type: nodeType,
@@ -41,7 +41,7 @@ function simulateAllMovements(
                 if (type === "simple") {
                     const availableMovements = pieceCopy.getSimpleMovements();
                     gameCopy.setAvailableMovements(availableMovements);
-
+                    // console.log("availableMovements", availableMovements);
                     availableMovements.forEach((movement) => {
                         const localGame = gameCopy.clone();
                         const localPiece = localGame.getPieceAt(pieceCopy.position)!;
@@ -50,27 +50,14 @@ function simulateAllMovements(
                             from: localPiece.position,
                             to: movement.coordinates,
                             player: localGame.currentPlayer,
+                            type: "simple",
                         });
-
-                        const newPiece = localGame.getPieceAt(movement.coordinates)!;
-                        const lastMovement = localGame.history[localGame.history.length - 1];
-                        const isAtBack = (lastMovement as GameMovement)?.from === movement.coordinates;
-
-                        if ((!newPiece && localGame.isTrap(movement.coordinates)) || isAtBack) {
-                            paths.push({
-                                type: nodeType,
-                                value: null,
-                                game: localGame,
-                                path: newPath,
-                                key: localGame.getBoardStr(),
-                            });
-                            return;
-                        }
 
                         paths.push(...simulateAllMovements(localGame, color, nodeType, `${newPath}[${localGame.id}]`, depth + 1, maxDepth));
                     });
                 } else if (type === "push") {
                     const availableMovements = pieceCopy.getPushablePieces();
+                    console.log("getPushablePieces", availableMovements);
                     gameCopy.setAvailableMovements(availableMovements);
 
                     availableMovements.forEach((movement) => {
@@ -80,6 +67,7 @@ function simulateAllMovements(
                             from: localPiece.position,
                             to: movement.coordinates,
                             player: localGame.currentPlayer,
+                            type: "pre-push",
                         });
 
                         localGame.availableMovements.forEach((availableMovement) => {
@@ -87,21 +75,10 @@ function simulateAllMovements(
                             subLocalGame.pushPiece({
                                 to: availableMovement.coordinates,
                                 player: subLocalGame.currentPlayer,
+                                type: "push",
                             });
 
                             const newPiece = subLocalGame.getPieceAt(movement.coordinates)!;
-
-                            if (!newPiece && subLocalGame.isTrap(movement.coordinates)) {
-                                paths.push({
-                                    type: nodeType,
-                                    value: null,
-                                    game: subLocalGame,
-                                    path: newPath,
-                                    key: subLocalGame.getBoardStr(),
-                                });
-
-                                return;
-                            }
 
                             newPiece.game = subLocalGame;
                             paths.push(...simulateAllMovements(subLocalGame, color, nodeType, `${newPath}[${subLocalGame.id}]`, depth + 1, maxDepth));
@@ -109,6 +86,7 @@ function simulateAllMovements(
                     });
                 } else {
                     const pullablePieces = pieceCopy.getPullablePieces();
+                    // console.log("getPullablePieces", pullablePieces);
                     gameCopy.setAvailableMovements(pullablePieces);
 
                     pullablePieces.forEach((movement) => {
@@ -120,6 +98,7 @@ function simulateAllMovements(
                             from: localPiece.position,
                             to: movement.coordinates,
                             player: localGame.currentPlayer,
+                            type: "pre-pull",
                         });
 
                         localGame.availableMovements.forEach((availableMovement) => {
@@ -129,20 +108,10 @@ function simulateAllMovements(
                                 from: localPiece.position,
                                 to: availableMovement.coordinates,
                                 player: subLocalGame.currentPlayer,
+                                type: "pull",
                             });
 
                             const newPiece = subLocalGame.getPieceAt(availableMovement.coordinates)!;
-
-                            if (!newPiece && subLocalGame.isTrap(availableMovement.coordinates)) {
-                                paths.push({
-                                    type: nodeType,
-                                    value: null,
-                                    game: subLocalGame,
-                                    path: newPath,
-                                    key: subLocalGame.getBoardStr(),
-                                });
-                                return;
-                            }
 
                             newPiece.game = subLocalGame;
                             paths.push(...simulateAllMovements(subLocalGame, color, nodeType, `${newPath}[${subLocalGame.id}]`, depth + 1, maxDepth));
@@ -159,7 +128,7 @@ function simulateAllMovements(
 export function gameSimulation(game: Game, type: "max" | "min"): MovementSimulation[] {
     const evaluatedNodes = new Set<string>();
     const nodes = simulateAllMovements(game, game.currentPlayer.color, type);
-    
+
     const uniques = nodes.filter((node) => {
         if (evaluatedNodes.has(node.key)) {
             return false;
@@ -167,6 +136,6 @@ export function gameSimulation(game: Game, type: "max" | "min"): MovementSimulat
 
         evaluatedNodes.add(node.key);
         return true;
-    })
+    });
     return uniques;
 }

@@ -5,12 +5,11 @@ import { gameSimulation } from "./simulation";
 
 
 export function minimax(node: MovementSimulation, isMaximizing: boolean): MovementSimulation {
-    // Si el nodo es hoja, devolvemos el nodo actual
     if (!node.children || node.children.length === 0) {
         if (node.value === null) {
             throw new Error(`Leaf node must have a value. Path: ${node.path}`);
         }
-        return node; // Nodo hoja
+        return node;
     }
 
     let bestNode: MovementSimulation | null = null;
@@ -24,7 +23,7 @@ export function minimax(node: MovementSimulation, isMaximizing: boolean): Moveme
                 bestNode = candidateNode;
             }
         }
-        node.value = maxValue; // Actualizamos el valor del nodo padre
+        node.value = maxValue;
     } else {
         let minValue = Infinity;
         for (const child of node.children) {
@@ -34,10 +33,9 @@ export function minimax(node: MovementSimulation, isMaximizing: boolean): Moveme
                 bestNode = candidateNode;
             }
         }
-        node.value = minValue; // Actualizamos el valor del nodo padre
+        node.value = minValue;
     }
 
-    // Validamos que se haya encontrado un nodo óptimo
     if (!bestNode) {
         throw new Error(`No valid child nodes found for node at path: ${node.path}`);
     }
@@ -76,8 +74,6 @@ export function getMinMaxTree(game: Game, isMax = true, depth = 0, maxDepth = 2)
 
     const type = isMax ? "max" : "min";
     const nodes = gameSimulation(game, type);
-
-    //console.log(`Depth: ${depth} - Nodes: ${nodes.length}`);
 
     return nodes.map((node) => {
         const children = getMinMaxTree(node.game, !isMax, depth + 1, maxDepth);

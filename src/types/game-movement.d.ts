@@ -2,7 +2,8 @@ import { Player } from "../class/Player";
 import { coordinates } from "./game-board";
 
 export type GameMovement = {
-    from: number[];
+    type: "simple" | "push" | "pre-push" | "pull" | "pre-pull";
+    from?: number[];
     to: number[];
     player: Player;
     turns?: number;
@@ -13,7 +14,6 @@ export type AvailableMovement = {
     type: "simple" | "push" | "pull";
 }
 
-export type PushMovement = Omit<GameMovement, "from">;
 
 
 export interface MovementSimulation {

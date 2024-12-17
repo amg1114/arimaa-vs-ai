@@ -2,7 +2,7 @@ import "./style.css";
 
 import { Game } from "./class/Game.ts";
 import { Piece } from "./class/pieces/Piece.ts";
-import { Player, PlayerIA } from "./class/Player.ts";
+import { Player } from "./class/Player.ts";
 
 import { GameMovement } from "./types/game-movement";
 
@@ -10,7 +10,6 @@ import { pullMovementButton, pushMovementButton, simpleMovementButton, disableMe
 import { onCellClick, onCellHover, parseOffsetToCoordinates } from "./utils/ui/events.ts";
 
 import { BLACK_CELL_COLOR, CELL_TEXT_COLOR, drawCell, drawImage, drawSelectedCell, TRAP_CELL_COLOR, WHITE_CELL_COLOR } from "./utils/ui/graphics.ts";
-import { Cat } from "./class/pieces/Cat.ts";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#canvas")!;
 const ctx = canvas.getContext("2d")!;
@@ -18,12 +17,7 @@ const ctx = canvas.getContext("2d")!;
 declare global {
     interface Window {
         game: Game;
-        piece: Piece;
-        playerA: Player;
-        playerB: PlayerIA;
-        p0: Piece;
-        p1: Piece;
-        nP: Piece;
+        
     }
 }
 
@@ -36,16 +30,13 @@ canvas.height = canvasHeight;
 
 // document ready
 const gPlayer = new Player("gold");
-const sPlayer = new PlayerIA("silver");
+const sPlayer = new Player("silver");
 var game = new Game(canvasHeight, canvasWidth, gPlayer, sPlayer);
 
 const cellHeight = game.cellHeight;
 const cellWidth = game.cellWidth;
 
 window.game = game;
-window.playerA = gPlayer;
-window.playerB = sPlayer;
-
 
 game.fillBoard();
 
@@ -59,22 +50,31 @@ canvas.addEventListener("click", (event: MouseEvent) => {
             from: game.activeCell!,
             to: cell,
             player: game.currentPlayer,
+            type: "simple",
         };
+        const playerColor = game.currentPlayer.color;
 
         if (game.isMoving === "simple") {
             game.simpleMovement(movement);
         } else if (game.isMoving === "push") {
             if (!game.floatingPiece) {
+                movement.type = "pre-push";
                 game.pushMovement(movement);
             } else {
+                movement.type = "push";
                 game.pushPiece(movement);
             }
         } else if (game.isMoving === "pull") {
             if (!game.floatingPiece) {
+                movement.type = "pre-pull";
                 game.pullMovement(movement);
             } else {
+                movement.type = "pull";
                 game.pullPiece(movement);
             }
+        }
+        if (game.currentPlayer.color !== playerColor) {
+            game.playIA();
         }
 
         disableMenu();
@@ -188,9 +188,9 @@ function drawBoard() {
             ctx.fillStyle = CELL_TEXT_COLOR;
 
             if (j === 0) {
-                ctx.fillText(`${i }`, j * cellWidth + 5, i * cellHeight + 10);
+                ctx.fillText(`${i}`, j * cellWidth + 5, i * cellHeight + 10);
             } else if (i === 0) {
-                ctx.fillText(`${j }`, j * cellWidth + 5, i * cellHeight + 10);
+                ctx.fillText(`${j}`, j * cellWidth + 5, i * cellHeight + 10);
             }
         }
     }
