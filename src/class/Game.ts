@@ -50,7 +50,7 @@ export class Game {
     }
 
     public fillBoard(): void {
-        this.staticFill();
+        this.randomFill();
     }
 
     public staticFill(): void {
